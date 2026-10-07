@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>Обработка изображений следов</title>
+<style>
+  body { font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5; }
+  h1 { color: #333; }
+  .container { max-width: 1200px; margin: 0 auto; }
+  .controls { margin: 20px 0; }
+  button { padding: 10px 20px; margin: 5px; font-size: 16px; cursor: pointer; }
+  .images { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; }
+  .images div { background: #fff; padding: 10px; border-radius: 5px; }
+  .images img { width: 100%; height: auto; display: block; }
+  .images p { text-align: center; font-weight: bold; margin: 5px 0; }
+  #status { margin: 10px 0; color: #555; }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>Обработка изображений следов</h1>
+  <p>Загрузите изображение следа и нажмите «Обработать».</p>
+
+  <div class="controls">
+    <input type="file" id="fileInput" accept="image/*">
+    <button id="processBtn" disabled>Обработать</button>
+    <button id="downloadBtn" disabled>Скачать результат</button>
+  </div>
+
+  <div id="status">Загрузка OpenCV.js...</div>
+
+  <div class="images">
+    <div><p>Исходное</p><img id="imgOriginal"></div>
+    <div><p>Оттенки серого</p><img id="imgGray"></div>
+    <div><p>Медианная фильтрация</p><img id="imgMedian"></div>
+    <div><p>Выравнивание контраста</p><img id="imgEnhanced"></div>
+    <div><p>Бинаризация + морфология</p><img id="imgBinary"></div>
+    <div><p>Выделенные контуры</p><img id="imgContours"></div>
+  </div>
+</div>
+
+<script async src="https://docs.opencv.org/4.8.0/opencv.js" onload="onOpenCvReady();"></script>
+<script>
+let cvReady = false;
+let srcMat = null;
+
+function onOpenCvReady() {
+  cvReady = true;
+  document.getElementById('status').textContent = 'OpenCV.js загружен. Выберите изображение.';
+  document.getElementById('fileInput').disabled = false;
+}
+
+document.getElementById('fileInput').addEventListener('change', function(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = function(event) {
+    const img = document.getElementById('imgOriginal');
+    img.onload = function() {
+      document.getElementById('processBtn').disabled = false;
+      document.getElementById('status').textContent = 'Изображение загружено. Нажмите «Обработать».';
+    };
+    img.src = event.target.result;
+  };
+  reader.readAsDataURL(file);
+});
+
+document.getElementById('processBtn').addEventListener('click', function() {
+  if (!cvReady) {
+    alert('OpenCV.js ещё не загружен. Подождите.');
+    return;
+  }
+
+  const imgElement = document.getElementById('imgOriginal');
+  if (!imgElement.src) {
+    alert('Сначала загрузите изображение.');
+    return;
+  }
+
+  document.getElementById('status').textContent = 'Обработка...';
+
+  // Читаем изображение в Mat
+  let src = cv.imread(imgElement);
+  cv.cvtColor(src, src, cv.COLOR_RGBA2RGB);
+
+  // 1. Оттенки серого
+  let gray = new cv.Mat();
+  cv.cvtColor(src, gray, cv.COLOR_RGB2GRAY);
+  cv.imshow('imgGray', gray);
+
+  // 2. Медианная фильтрация
+  let median = new cv.Mat();
+  cv.medianBlur(gray, median, 5);
+  cv.imshow('imgMedian', median);
+
+  // 3. Выравнивание контраста (CLAHE)
+  let clahe = new cv.CLAHE(2.0, new cv.Size(8, 8));
+  let enhanced = new cv.Mat();
+  clahe.apply(median, enhanced);
+  cv.imshow('imgEnhanced', enhanced);
+
+  // 4. Бинаризация методом Оцу
+  let binary = new cv.Mat();
+  cv.threshold(enhanced, binary, 0, 255, cv.THRESH_BINARY + cv.THRESH_OTSU);
+
+  // 5. Морфология
+  let kernel = cv.Mat.ones(3, 3, cv.CV_8U);
+  let morph = new cv.Mat();
+  cv.morphologyEx(binary, morph, cv.MORPH_CLOSE, kernel, new cv.Point(-1, -1), 2);
+  cv.morphologyEx(morph, morph, cv.MORPH_OPEN, kernel, new cv.Point(-1, -1), 1);
+  cv.imshow('imgBinary', morph);
+
+  // 6. Выделение контуров
+  let contours = new cv.MatVector();
+  let hierarchy = new cv.Mat();
+  cv.findContours(morph, contours, hierarchy, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE);
+
+  let contoursImg = src.clone();
+  for (let i = 0; i < contours.size(); i++) {
+    cv.drawContours(contoursImg, contours, i, new cv.Scalar(255, 0, 0), 2);
+  }
+  cv.imshow('imgContours', contoursImg);
+
+  // Сохраняем результат для скачивания
+  srcMat = contoursImg;
+
+  document.getElementById('downloadBtn').disabled = false;
+  document.getElementById('status').textContent = 'Обработка завершена.';
+
+  // Освобождаем память
+  src.delete(); gray.delete(); median.delete(); enhanced.delete();
+  binary.delete(); kernel.delete(); morph.delete();
+  contours.delete(); hierarchy.delete();
+});
+
+document.getElementById('downloadBtn').addEventListener('click', function() {
+  if (!srcMat) return;
+  const canvas = document.createElement('canvas');
+  cv.imshow(canvas, srcMat);
+  const link = document.createElement('a');
+  link.download = 'result_contours.png';
+  link.href = canvas.toDataURL('image/png');
+  link.click();
+});
+</script>
+</body>
+</html>
