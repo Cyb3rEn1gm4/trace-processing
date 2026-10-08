@@ -8,20 +8,16 @@
   * { box-sizing: border-box; }
   body {
     font-family: 'Segoe UI', Arial, sans-serif;
-    margin: 0;
-    padding: 20px;
-    background: #eef1f5;
-    color: #222;
+    margin: 0; padding: 20px;
+    background: #eef1f5; color: #222;
   }
   .container { max-width: 1300px; margin: 0 auto; }
   h1 { font-size: 22px; margin: 0 0 5px 0; color: #1a3d6d; }
   .subtitle { color: #555; font-size: 14px; margin-bottom: 20px; }
 
   .panel {
-    background: #fff;
-    border-radius: 8px;
-    padding: 20px;
-    margin-bottom: 20px;
+    background: #fff; border-radius: 8px;
+    padding: 20px; margin-bottom: 20px;
     box-shadow: 0 2px 6px rgba(0,0,0,0.08);
   }
 
@@ -29,22 +25,16 @@
   .controls label { font-size: 14px; font-weight: 600; color: #333; }
 
   input[type="file"] {
-    padding: 6px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    background: #fafafa;
+    padding: 6px; border: 1px solid #ccc;
+    border-radius: 4px; background: #fafafa;
   }
 
   input[type="range"] { width: 140px; vertical-align: middle; }
   .range-value { font-size: 13px; color: #1a3d6d; font-weight: 600; min-width: 30px; display: inline-block; }
 
   button {
-    padding: 10px 22px;
-    font-size: 15px;
-    font-weight: 600;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
+    padding: 10px 22px; font-size: 15px; font-weight: 600;
+    border: none; border-radius: 5px; cursor: pointer;
     transition: background 0.2s;
   }
   button:disabled { opacity: 0.5; cursor: not-allowed; }
@@ -56,13 +46,9 @@
   #resetBtn:hover:not(:disabled) { background: #7c8288; }
 
   #status {
-    margin-top: 15px;
-    padding: 12px 15px;
-    background: #f1f8e9;
-    border-left: 4px solid #34a853;
-    border-radius: 4px;
-    font-size: 14px;
-    min-height: 20px;
+    margin-top: 15px; padding: 12px 15px;
+    background: #f1f8e9; border-left: 4px solid #34a853;
+    border-radius: 4px; font-size: 14px; min-height: 20px;
   }
   #status.error { background: #fdecea; border-left-color: #d93025; color: #a50e0e; }
   #status.working { background: #e8f0fe; border-left-color: #1a73e8; color: #1a3d6d; }
@@ -73,24 +59,16 @@
     gap: 15px;
   }
   .image-card {
-    background: #fff;
-    border-radius: 8px;
-    padding: 12px;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+    background: #fff; border-radius: 8px;
+    padding: 12px; box-shadow: 0 2px 6px rgba(0,0,0,0.08);
   }
   .image-card h3 {
-    margin: 0 0 8px 0;
-    font-size: 14px;
-    color: #1a3d6d;
-    text-align: center;
+    margin: 0 0 8px 0; font-size: 14px;
+    color: #1a3d6d; text-align: center;
   }
   .image-card canvas {
-    width: 100%;
-    height: auto;
-    display: block;
-    background: #f0f0f0;
-    border-radius: 4px;
-    min-height: 180px;
+    width: 100%; height: auto; display: block;
+    background: #f0f0f0; border-radius: 4px; min-height: 180px;
   }
 
   .footer { text-align: center; color: #888; font-size: 12px; margin-top: 30px; }
@@ -104,21 +82,21 @@
   <div class="panel">
     <div class="controls">
       <label for="fileInput">Изображение следа:</label>
-      <input type="file" id="fileInput" accept="image/*" disabled>
+      <input type="file" id="fileInput" accept="image/*">
 
       <label for="blurRange">Сила фильтрации:</label>
-      <input type="range" id="blurRange" min="1" max="15" value="5" step="2" disabled>
-      <span class="range-value" id="blurValue">5</span>
+      <input type="range" id="blurRange" min="1" max="9" value="3" step="2">
+      <span class="range-value" id="blurValue">3</span>
 
       <label for="morphRange">Морфология:</label>
-      <input type="range" id="morphRange" min="0" max="5" value="1" step="1" disabled>
+      <input type="range" id="morphRange" min="0" max="3" value="1" step="1">
       <span class="range-value" id="morphValue">1</span>
 
       <button id="processBtn" disabled>Обработать</button>
       <button id="downloadBtn" disabled>Скачать результат</button>
       <button id="resetBtn" disabled>Сбросить</button>
     </div>
-    <div id="status">Загрузка OpenCV.js... Пожалуйста, подождите.</div>
+    <div id="status">Загрузка компонентов обработки... Пожалуйста, подождите.</div>
   </div>
 
   <div class="images">
@@ -135,41 +113,17 @@
 
 <script>
 // ============================================================
-// ЗАГРУЗКА OpenCV.js
+// ОБРАБОТКА ИЗОБРАЖЕНИЙ НА ЧИСТОМ JAVASCRIPT
+// Без внешних библиотек, без CDN, без OpenCV
 // ============================================================
-const cvScript = document.createElement('script');
-cvScript.src = 'https://docs.opencv.org/4.7.0/opencv.js';
-cvScript.async = true;
-cvScript.onload = function() {
-  if (typeof cv !== 'undefined' && cv.getBuildInformation) {
-    onOpenCvReady();
-  } else if (typeof cv !== 'undefined') {
-    cv['onRuntimeInitialized'] = onOpenCvReady;
-  } else {
-    showStatus('Ошибка: OpenCV.js загрузился некорректно.', true);
-  }
-};
-cvScript.onerror = function() {
-  showStatus('Ошибка: не удалось загрузить OpenCV.js. Проверьте подключение к интернету.', true);
-};
-document.head.appendChild(cvScript);
 
-// ============================================================
-// ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ
-// ============================================================
-let cvReady = false;
-let sourceImageData = null;   // исходные данные изображения
-let processedCanvas = null;   // canvas с итоговым результатом
+let sourceImageData = null;
+let processedCanvas = null;
+let cvReady = true; // у нас нет внешних зависимостей, всегда готовы
 
 // ============================================================
 // ИНИЦИАЛИЗАЦИЯ
 // ============================================================
-function onOpenCvReady() {
-  cvReady = true;
-  showStatus('OpenCV.js успешно загружен. Выберите изображение следа.', false, 'ready');
-  document.getElementById('fileInput').disabled = false;
-}
-
 function showStatus(text, isError, mode) {
   const el = document.getElementById('status');
   el.textContent = text;
@@ -177,6 +131,9 @@ function showStatus(text, isError, mode) {
   if (isError) el.className = 'error';
   else if (mode === 'working') el.className = 'working';
 }
+
+showStatus('Готово. Выберите изображение следа.', false, 'ready');
+document.getElementById('fileInput').disabled = false;
 
 // ============================================================
 // ВЫБОР ФАЙЛА
@@ -191,8 +148,8 @@ document.getElementById('fileInput').addEventListener('change', function(e) {
   reader.onload = function(event) {
     const img = new Image();
     img.onload = function() {
-      // Уменьшаем изображение до 1000 px по большей стороне
-      const MAX_SIZE = 1000;
+      // Уменьшаем изображение до 1200 px по большей стороне
+      const MAX_SIZE = 1200;
       let w = img.width;
       let h = img.height;
       if (w > MAX_SIZE || h > MAX_SIZE) {
@@ -209,7 +166,7 @@ document.getElementById('fileInput').addEventListener('change', function(e) {
       const tmp = document.createElement('canvas');
       tmp.width = w;
       tmp.height = h;
-      const ctx = tmp.getContext('2d');
+      const ctx = tmp.getContext('2d', { willReadFrequently: true });
       ctx.drawImage(img, 0, 0, w, h);
 
       sourceImageData = ctx.getImageData(0, 0, w, h);
@@ -231,8 +188,6 @@ document.getElementById('fileInput').addEventListener('change', function(e) {
       // Активируем контролы
       document.getElementById('processBtn').disabled = false;
       document.getElementById('downloadBtn').disabled = true;
-      document.getElementById('blurRange').disabled = false;
-      document.getElementById('morphRange').disabled = false;
       document.getElementById('resetBtn').disabled = false;
 
       showStatus('Изображение загружено: ' + w + '×' + h + ' пикселей. Нажмите «Обработать».', false, 'ready');
@@ -262,124 +217,296 @@ document.getElementById('morphRange').addEventListener('input', function() {
 // ОБРАБОТКА
 // ============================================================
 document.getElementById('processBtn').addEventListener('click', function() {
-  if (!cvReady) { showStatus('OpenCV.js ещё не загружен.', true); return; }
   if (!sourceImageData) { showStatus('Сначала загрузите изображение.', true); return; }
 
   document.getElementById('processBtn').disabled = true;
   document.getElementById('downloadBtn').disabled = true;
 
   // Даём браузеру отрисовать интерфейс перед тяжёлой работой
-  setTimeout(processImage, 60);
+  setTimeout(function() {
+    try {
+      processImage();
+    } catch (err) {
+      console.error(err);
+      showStatus('Ошибка обработки: ' + err.message, true);
+      document.getElementById('processBtn').disabled = false;
+    }
+  }, 60);
 });
 
 function processImage() {
   const blurSize = parseInt(document.getElementById('blurRange').value, 10);
   const morphIter = parseInt(document.getElementById('morphRange').value, 10);
+  const w = sourceImageData.width;
+  const h = sourceImageData.height;
 
-  let src, gray, median, enhanced, binary, kernel, morph, contoursImg, rgba;
-  let contours, hierarchy;
+  // ---------- Шаг 1. Загрузка ----------
+  showStatus('Шаг 1/6: подготовка изображения...', false, 'working');
+  const srcData = sourceImageData.data;
 
-  try {
-    const w = sourceImageData.width;
-    const h = sourceImageData.height;
-
-    // ---------- Шаг 1. Загрузка ----------
-    showStatus('Шаг 1/6: подготовка изображения...', false, 'working');
-    src = cv.matFromImageData(sourceImageData);
-
-    // ---------- Шаг 2. Оттенки серого ----------
-    showStatus('Шаг 2/6: перевод в оттенки серого...', false, 'working');
-    gray = new cv.Mat();
-    cv.cvtColor(src, gray, cv.COLOR_RGBA2GRAY);
-    drawMat(gray, 'cvGray');
-
-    // ---------- Шаг 3. Фильтрация ----------
-    showStatus('Шаг 3/6: медианная фильтрация (устранение шума)...', false, 'working');
-    median = new cv.Mat();
-    // Ядро должно быть нечётным и >= 1
-    let ksize = Math.max(1, blurSize);
-    if (ksize % 2 === 0) ksize += 1;
-    cv.medianBlur(gray, median, ksize);
-    drawMat(median, 'cvMedian');
-
-    // ---------- Шаг 4. Выравнивание контраста ----------
-    showStatus('Шаг 4/6: выравнивание контраста...', false, 'working');
-    enhanced = new cv.Mat();
-    // Нормализация диапазона яркостей (без CLAHE — работает стабильно)
-    cv.normalize(median, enhanced, 0, 255, cv.NORM_MINMAX);
-    drawMat(enhanced, 'cvEnhanced');
-
-    // ---------- Шаг 5. Бинаризация и морфология ----------
-    showStatus('Шаг 5/6: бинаризация и морфологическая обработка...', false, 'working');
-    binary = new cv.Mat();
-    cv.threshold(enhanced, binary, 0, 255, cv.THRESH_BINARY + cv.THRESH_OTSU);
-
-    kernel = cv.Mat.ones(3, 3, cv.CV_8U);
-    morph = new cv.Mat();
-    if (morphIter > 0) {
-      cv.morphologyEx(binary, morph, cv.MORPH_CLOSE, kernel, new cv.Point(-1,-1), morphIter);
-      cv.morphologyEx(morph, morph, cv.MORPH_OPEN, kernel, new cv.Point(-1,-1), morphIter);
-    } else {
-      binary.copyTo(morph);
-    }
-    drawMat(morph, 'cvBinary');
-
-    // ---------- Шаг 6. Контуры ----------
-    showStatus('Шаг 6/6: выделение контуров следа...', false, 'working');
-    contours = new cv.MatVector();
-    hierarchy = new cv.Mat();
-    cv.findContours(morph, contours, hierarchy, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE);
-
-    contoursImg = src.clone();
-    for (let i = 0; i < contours.size(); i++) {
-      cv.drawContours(contoursImg, contours, i, new cv.Scalar(255, 0, 0, 255), 2);
-    }
-    drawMat(contoursImg, 'cvContours');
-
-    // ---------- Готово ----------
-    processedCanvas = document.getElementById('cvContours');
-    document.getElementById('downloadBtn').disabled = false;
-    showStatus('Обработка завершена. Найдено контуров: ' + contours.size() + '. Можно скачать результат.', false, 'ready');
-
-  } catch (err) {
-    console.error(err);
-    showStatus('Ошибка обработки: ' + err.message, true);
-  } finally {
-    // Освобождаем память OpenCV
-    [src, gray, median, enhanced, binary, kernel, morph, contoursImg].forEach(function(m) {
-      if (m && typeof m.delete === 'function') { try { m.delete(); } catch(e){} }
-    });
-    if (contours && typeof contours.delete === 'function') { try { contours.delete(); } catch(e){} }
-    if (hierarchy && typeof hierarchy.delete === 'function') { try { hierarchy.delete(); } catch(e){} }
-    if (rgba && typeof rgba.delete === 'function') { try { rgba.delete(); } catch(e){} }
-
-    document.getElementById('processBtn').disabled = false;
+  // ---------- Шаг 2. Оттенки серого ----------
+  showStatus('Шаг 2/6: перевод в оттенки серого...', false, 'working');
+  const grayData = new Uint8ClampedArray(w * h * 4);
+  const grayValues = new Uint8ClampedArray(w * h); // массив яркостей (1 канал)
+  for (let i = 0; i < w * h; i++) {
+    const r = srcData[i * 4];
+    const g = srcData[i * 4 + 1];
+    const b = srcData[i * 4 + 2];
+    // Формула яркости (стандарт ITU-R BT.601)
+    const val = Math.round(0.299 * r + 0.587 * g + 0.114 * b);
+    grayValues[i] = val;
+    grayData[i * 4] = val;
+    grayData[i * 4 + 1] = val;
+    grayData[i * 4 + 2] = val;
+    grayData[i * 4 + 3] = 255;
   }
+  putImageDataToCanvas(grayData, w, h, 'cvGray');
+
+  // ---------- Шаг 3. Медианная фильтрация ----------
+  showStatus('Шаг 3/6: медианная фильтрация (устранение шума)...', false, 'working');
+  const medianValues = medianBlur(grayValues, w, h, blurSize);
+  const medianData = new Uint8ClampedArray(w * h * 4);
+  for (let i = 0; i < w * h; i++) {
+    const v = medianValues[i];
+    medianData[i * 4] = v;
+    medianData[i * 4 + 1] = v;
+    medianData[i * 4 + 2] = v;
+    medianData[i * 4 + 3] = 255;
+  }
+  putImageDataToCanvas(medianData, w, h, 'cvMedian');
+
+  // ---------- Шаг 4. Выравнивание контраста (нормализация) ----------
+  showStatus('Шаг 4/6: выравнивание контраста...', false, 'working');
+  let minVal = 255, maxVal = 0;
+  for (let i = 0; i < w * h; i++) {
+    const v = medianValues[i];
+    if (v < minVal) minVal = v;
+    if (v > maxVal) maxVal = v;
+  }
+  const range = Math.max(1, maxVal - minVal);
+  const enhancedValues = new Uint8ClampedArray(w * h);
+  for (let i = 0; i < w * h; i++) {
+    enhancedValues[i] = Math.round((medianValues[i] - minVal) * 255 / range);
+  }
+  const enhancedData = new Uint8ClampedArray(w * h * 4);
+  for (let i = 0; i < w * h; i++) {
+    const v = enhancedValues[i];
+    enhancedData[i * 4] = v;
+    enhancedData[i * 4 + 1] = v;
+    enhancedData[i * 4 + 2] = v;
+    enhancedData[i * 4 + 3] = 255;
+  }
+  putImageDataToCanvas(enhancedData, w, h, 'cvEnhanced');
+
+  // ---------- Шаг 5. Бинаризация (метод Оцу) + Морфология ----------
+  showStatus('Шаг 5/6: бинаризация и морфологическая обработка...', false, 'working');
+  const threshold = otsuThreshold(enhancedValues, w * h);
+  const binaryValues = new Uint8ClampedArray(w * h);
+  for (let i = 0; i < w * h; i++) {
+    binaryValues[i] = enhancedValues[i] > threshold ? 255 : 0;
+  }
+  // Морфология: закрытие (заполнение разрывов) + открытие (удаление шума)
+  let morphValues = binaryValues;
+  if (morphIter > 0) {
+    morphValues = morphology(morphValues, w, h, 'close', morphIter);
+    morphValues = morphology(morphValues, w, h, 'open', morphIter);
+  }
+  const morphData = new Uint8ClampedArray(w * h * 4);
+  for (let i = 0; i < w * h; i++) {
+    const v = morphValues[i];
+    morphData[i * 4] = v;
+    morphData[i * 4 + 1] = v;
+    morphData[i * 4 + 2] = v;
+    morphData[i * 4 + 3] = 255;
+  }
+  putImageDataToCanvas(morphData, w, h, 'cvBinary');
+
+  // ---------- Шаг 6. Выделение контуров ----------
+  showStatus('Шаг 6/6: выделение контуров следа...', false, 'working');
+  // Создаём контурное изображение: накладываем контуры на исходное
+  const contoursData = new Uint8ClampedArray(srcData); // копия исходного
+  const edges = sobelEdges(morphValues, w, h);
+  let edgeCount = 0;
+  for (let i = 0; i < w * h; i++) {
+    if (edges[i] > 0) {
+      edgeCount++;
+      // Красим контурные пиксели в ярко-красный
+      contoursData[i * 4] = 255;
+      contoursData[i * 4 + 1] = 0;
+      contoursData[i * 4 + 2] = 0;
+      contoursData[i * 4 + 3] = 255;
+    }
+  }
+  putImageDataToCanvas(contoursData, w, h, 'cvContours');
+
+  processedCanvas = document.getElementById('cvContours');
+  document.getElementById('downloadBtn').disabled = false;
+  showStatus('Обработка завершена. Найдено контурных пикселей: ' + edgeCount + '. Можно скачать результат.', false, 'ready');
+  document.getElementById('processBtn').disabled = false;
 }
 
 // ============================================================
-// ОТРИСОВКА Mat В CANVAS
+// ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ОБРАБОТКИ
 // ============================================================
-function drawMat(mat, canvasId) {
+
+// Запись ImageData в canvas
+function putImageDataToCanvas(data, w, h, canvasId) {
   const canvas = document.getElementById(canvasId);
-  let rgba = new cv.Mat();
-  try {
-    if (mat.channels() === 1) {
-      cv.cvtColor(mat, rgba, cv.COLOR_GRAY2RGBA);
-    } else if (mat.channels() === 3) {
-      cv.cvtColor(mat, rgba, cv.COLOR_RGB2RGBA);
-    } else if (mat.channels() === 4) {
-      rgba = mat.clone();
-    } else {
-      throw new Error('Неподдерживаемое число каналов: ' + mat.channels());
+  canvas.width = w;
+  canvas.height = h;
+  const imageData = new ImageData(data, w, h);
+  canvas.getContext('2d').putImageData(imageData, 0, 0);
+}
+
+// Медианная фильтрация
+function medianBlur(values, w, h, kernelSize) {
+  const result = new Uint8ClampedArray(w * h);
+  const radius = Math.floor(kernelSize / 2);
+  for (let y = 0; y < h; y++) {
+    for (let x = 0; x < w; x++) {
+      const window = [];
+      for (let dy = -radius; dy <= radius; dy++) {
+        for (let dx = -radius; dx <= radius; dx++) {
+          const ny = y + dy;
+          const nx = x + dx;
+          if (ny >= 0 && ny < h && nx >= 0 && nx < w) {
+            window.push(values[ny * w + nx]);
+          }
+        }
+      }
+      window.sort(function(a, b) { return a - b; });
+      result[y * w + x] = window[Math.floor(window.length / 2)];
     }
-    canvas.width = rgba.cols;
-    canvas.height = rgba.rows;
-    const imageData = new ImageData(new Uint8ClampedArray(rgba.data), rgba.cols, rgba.rows);
-    canvas.getContext('2d').putImageData(imageData, 0, 0);
-  } finally {
-    if (rgba && rgba !== mat) { try { rgba.delete(); } catch(e){} }
   }
+  return result;
+}
+
+// Порог Оцу
+function otsuThreshold(values, total) {
+  const hist = new Array(256).fill(0);
+  for (let i = 0; i < total; i++) {
+    hist[values[i]]++;
+  }
+  let sum = 0;
+  for (let i = 0; i < 256; i++) sum += i * hist[i];
+  let sumB = 0, wB = 0, maxVar = 0, threshold = 0;
+  for (let i = 0; i < 256; i++) {
+    wB += hist[i];
+    if (wB === 0) continue;
+    const wF = total - wB;
+    if (wF === 0) break;
+    sumB += i * hist[i];
+    const mB = sumB / wB;
+    const mF = (sum - sumB) / wF;
+    const between = wB * wF * (mB - mF) * (mB - mF);
+    if (between > maxVar) {
+      maxVar = between;
+      threshold = i;
+    }
+  }
+  return threshold;
+}
+
+// Морфологические операции
+function morphology(values, w, h, operation, iterations) {
+  let result = new Uint8ClampedArray(values);
+  for (let iter = 0; iter < iterations; iter++) {
+    const temp = new Uint8ClampedArray(w * h);
+    for (let y = 0; y < h; y++) {
+      for (let x = 0; x < w; x++) {
+        const idx = y * w + x;
+        let val;
+        if (operation === 'dilate') {
+          // Dilate: если хотя бы один сосед белый — пиксель становится белым
+          val = 0;
+          for (let dy = -1; dy <= 1; dy++) {
+            for (let dx = -1; dx <= 1; dx++) {
+              const ny = y + dy, nx = x + dx;
+              if (ny >= 0 && ny < h && nx >= 0 && nx < w) {
+                if (values[ny * w + nx] === 255) val = 255;
+              }
+            }
+          }
+        } else if (operation === 'erode') {
+          // Erode: если хотя бы один сосед чёрный — пиксель становится чёрным
+          val = 255;
+          for (let dy = -1; dy <= 1; dy++) {
+            for (let dx = -1; dx <= 1; dx++) {
+              const ny = y + dy, nx = x + dx;
+              if (ny >= 0 && ny < h && nx >= 0 && nx < w) {
+                if (values[ny * w + nx] === 0) val = 0;
+              }
+            }
+          }
+        }
+        temp[idx] = val;
+      }
+    }
+    // Закрытие = dilate затем erode
+    // Открытие = erode затем dilate
+    if (operation === 'close') {
+      result = temp;
+      // Затем erode
+      const temp2 = new Uint8ClampedArray(w * h);
+      for (let y = 0; y < h; y++) {
+        for (let x = 0; x < w; x++) {
+          let val = 255;
+          for (let dy = -1; dy <= 1; dy++) {
+            for (let dx = -1; dx <= 1; dx++) {
+              const ny = y + dy, nx = x + dx;
+              if (ny >= 0 && ny < h && nx >= 0 && nx < w) {
+                if (result[ny * w + nx] === 0) val = 0;
+              }
+            }
+          }
+          temp2[y * w + x] = val;
+        }
+      }
+      result = temp2;
+    } else if (operation === 'open') {
+      result = temp; // erode
+      // Затем dilate
+      const temp2 = new Uint8ClampedArray(w * h);
+      for (let y = 0; y < h; y++) {
+        for (let x = 0; x < w; x++) {
+          let val = 0;
+          for (let dy = -1; dy <= 1; dy++) {
+            for (let dx = -1; dx <= 1; dx++) {
+              const ny = y + dy, nx = x + dx;
+              if (ny >= 0 && ny < h && nx >= 0 && nx < w) {
+                if (result[ny * w + nx] === 255) val = 255;
+              }
+            }
+          }
+          temp2[y * w + x] = val;
+        }
+      }
+      result = temp2;
+    }
+  }
+  return result;
+}
+
+// Оператор Собеля для выделения границ
+function sobelEdges(values, w, h) {
+  const result = new Uint8ClampedArray(w * h);
+  const Gx = [[-1, 0, 1], [-2, 0, 2], [-1, 0, 1]];
+  const Gy = [[-1, -2, -1], [0, 0, 0], [1, 2, 1]];
+  for (let y = 1; y < h - 1; y++) {
+    for (let x = 1; x < w - 1; x++) {
+      let sumX = 0, sumY = 0;
+      for (let dy = -1; dy <= 1; dy++) {
+        for (let dx = -1; dx <= 1; dx++) {
+          const val = values[(y + dy) * w + (x + dx)];
+          sumX += val * Gx[dy + 1][dx + 1];
+          sumY += val * Gy[dy + 1][dx + 1];
+        }
+      }
+      const magnitude = Math.sqrt(sumX * sumX + sumY * sumY);
+      result[y * w + x] = magnitude > 100 ? 255 : 0;
+    }
+  }
+  return result;
 }
 
 // ============================================================
@@ -406,8 +533,6 @@ document.getElementById('resetBtn').addEventListener('click', function() {
   });
   document.getElementById('processBtn').disabled = true;
   document.getElementById('downloadBtn').disabled = true;
-  document.getElementById('blurRange').disabled = true;
-  document.getElementById('morphRange').disabled = true;
   document.getElementById('resetBtn').disabled = true;
   showStatus('Сброшено. Выберите новое изображение.', false, 'ready');
 });
