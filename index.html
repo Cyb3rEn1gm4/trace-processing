@@ -5,135 +5,549 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Обработка изображений следов — трасологическая экспертиза</title>
 <style>
-  * { box-sizing: border-box; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
   body {
-    font-family: 'Segoe UI', Arial, sans-serif;
-    margin: 0; padding: 20px;
-    background: #eef1f5; color: #222;
-  }
-  .container { max-width: 1300px; margin: 0 auto; }
-  h1 { font-size: 22px; margin: 0 0 5px 0; color: #1a3d6d; }
-  .subtitle { color: #555; font-size: 14px; margin-bottom: 20px; }
-
-  .panel {
-    background: #fff; border-radius: 8px;
-    padding: 20px; margin-bottom: 20px;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+    font-family: 'Segoe UI', Tahoma, Arial, sans-serif;
+    background: #0f1419;
+    color: #e6e6e6;
+    min-height: 100vh;
+    padding: 0;
   }
 
-  .controls { display: flex; flex-wrap: wrap; gap: 15px; align-items: center; }
-  .controls label { font-size: 14px; font-weight: 600; color: #333; }
+  /* ===== ШАПКА ===== */
+  .header {
+    background: linear-gradient(135deg, #1a3d6d 0%, #0d2440 100%);
+    padding: 20px 30px;
+    border-bottom: 2px solid #1a73e8;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+  }
+  .header h1 { font-size: 22px; color: #fff; font-weight: 600; }
+  .header .sub { color: #8ab4f8; font-size: 13px; margin-top: 4px; }
 
+  /* ===== ОСНОВНОЙ КОНТЕЙНЕР ===== */
+  .container { max-width: 1500px; margin: 0 auto; padding: 20px; }
+
+  /* ===== ПАНЕЛЬ УПРАВЛЕНИЯ ===== */
+  .toolbar {
+    background: #1a1f2e;
+    border-radius: 10px;
+    padding: 20px;
+    margin-bottom: 20px;
+    border: 1px solid #2a3446;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 18px;
+    align-items: center;
+  }
+  .tool-group {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  }
+  .tool-group label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #8ab4f8;
+    font-weight: 600;
+  }
   input[type="file"] {
-    padding: 6px; border: 1px solid #ccc;
-    border-radius: 4px; background: #fafafa;
+    padding: 8px 12px;
+    background: #0d1117;
+    border: 1px solid #2a3446;
+    border-radius: 6px;
+    color: #e6e6e6;
+    font-size: 13px;
+    cursor: pointer;
+    min-width: 220px;
   }
-
-  input[type="range"] { width: 140px; vertical-align: middle; }
-  .range-value { font-size: 13px; color: #1a3d6d; font-weight: 600; min-width: 30px; display: inline-block; }
+  input[type="file"]::file-selector-button {
+    background: #1a73e8;
+    color: #fff;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-right: 10px;
+    font-size: 12px;
+    font-weight: 600;
+  }
+  input[type="range"] {
+    width: 130px;
+    accent-color: #1a73e8;
+    cursor: pointer;
+  }
+  .range-val {
+    display: inline-block;
+    min-width: 32px;
+    text-align: center;
+    background: #0d1117;
+    border: 1px solid #2a3446;
+    border-radius: 4px;
+    padding: 3px 6px;
+    font-size: 12px;
+    color: #8ab4f8;
+    font-weight: 600;
+  }
 
   button {
-    padding: 10px 22px; font-size: 15px; font-weight: 600;
-    border: none; border-radius: 5px; cursor: pointer;
-    transition: background 0.2s;
+    padding: 10px 20px;
+    font-size: 14px;
+    font-weight: 600;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: inherit;
   }
-  button:disabled { opacity: 0.5; cursor: not-allowed; }
-  #processBtn { background: #1a73e8; color: #fff; }
-  #processBtn:hover:not(:disabled) { background: #1557b0; }
-  #downloadBtn { background: #34a853; color: #fff; }
-  #downloadBtn:hover:not(:disabled) { background: #2a8642; }
-  #resetBtn { background: #9aa0a6; color: #fff; }
-  #resetBtn:hover:not(:disabled) { background: #7c8288; }
+  button:disabled { opacity: 0.35; cursor: not-allowed; }
+  .btn-primary { background: #1a73e8; color: #fff; }
+  .btn-primary:hover:not(:disabled) { background: #2b82f0; box-shadow: 0 0 12px rgba(26,115,232,0.5); }
+  .btn-success { background: #1e8e3e; color: #fff; }
+  .btn-success:hover:not(:disabled) { background: #25a34a; box-shadow: 0 0 12px rgba(30,142,62,0.5); }
+  .btn-secondary { background: #3c4043; color: #e6e6e6; }
+  .btn-secondary:hover:not(:disabled) { background: #4a4e51; }
 
-  #status {
-    margin-top: 15px; padding: 12px 15px;
-    background: #f1f8e9; border-left: 4px solid #34a853;
-    border-radius: 4px; font-size: 14px; min-height: 20px;
+  /* ===== СТАТУС И ПРОГРЕСС ===== */
+  .status-bar {
+    background: #1a1f2e;
+    border-radius: 8px;
+    padding: 14px 18px;
+    margin-bottom: 20px;
+    border-left: 4px solid #1a73e8;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
   }
-  #status.error { background: #fdecea; border-left-color: #d93025; color: #a50e0e; }
-  #status.working { background: #e8f0fe; border-left-color: #1a73e8; color: #1a3d6d; }
+  #statusText { font-size: 14px; color: #e6e6e6; }
+  .status-bar.error { border-left-color: #d93025; background: #2a1518; }
+  .status-bar.error #statusText { color: #f28b82; }
+  .status-bar.working { border-left-color: #fbbc04; }
+  .status-bar.working #statusText { color: #fdd663; }
+  .status-bar.ready { border-left-color: #1e8e3e; }
 
-  .images {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  .progress-wrap {
+    width: 220px;
+    height: 6px;
+    background: #0d1117;
+    border-radius: 3px;
+    overflow: hidden;
+    display: none;
+  }
+  .progress-wrap.active { display: block; }
+  .progress-fill {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, #1a73e8, #8ab4f8);
+    transition: width 0.3s;
+  }
+
+  /* ===== ИНФО О ИЗОБРАЖЕНИИ ===== */
+  .info-bar {
+    display: flex;
+    flex-wrap: wrap;
     gap: 15px;
+    background: #1a1f2e;
+    border-radius: 8px;
+    padding: 12px 18px;
+    margin-bottom: 20px;
+    font-size: 13px;
+    border: 1px solid #2a3446;
+  }
+  .info-item { display: flex; gap: 6px; align-items: center; }
+  .info-item .label { color: #8ab4f8; font-weight: 600; }
+  .info-item .value { color: #e6e6e6; font-family: 'Consolas', monospace; }
+
+  /* ===== СЕТКА ИЗОБРАЖЕНИЙ ===== */
+  .images-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 16px;
   }
   .image-card {
-    background: #fff; border-radius: 8px;
-    padding: 12px; box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+    background: #1a1f2e;
+    border-radius: 10px;
+    overflow: hidden;
+    border: 1px solid #2a3446;
+    transition: border-color 0.2s, transform 0.2s;
+    display: flex;
+    flex-direction: column;
   }
-  .image-card h3 {
-    margin: 0 0 8px 0; font-size: 14px;
-    color: #1a3d6d; text-align: center;
+  .image-card:hover {
+    border-color: #1a73e8;
+    transform: translateY(-2px);
   }
-  .image-card canvas {
-    width: 100%; height: auto; display: block;
-    background: #f0f0f0; border-radius: 4px; min-height: 180px;
+  .image-card.active { border-color: #1a73e8; box-shadow: 0 0 0 1px #1a73e8; }
+
+  .card-header {
+    padding: 12px 16px;
+    background: #0d1117;
+    border-bottom: 1px solid #2a3446;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .card-header h3 {
+    font-size: 13px;
+    font-weight: 600;
+    color: #8ab4f8;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .step-num {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    background: #1a73e8;
+    color: #fff;
+    border-radius: 50%;
+    font-size: 11px;
+    font-weight: 700;
+  }
+  .card-actions {
+    display: flex;
+    gap: 6px;
+  }
+  .icon-btn {
+    background: #3c4043;
+    border: none;
+    color: #e6e6e6;
+    width: 30px;
+    height: 30px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s;
+    padding: 0;
+  }
+  .icon-btn:hover:not(:disabled) { background: #1a73e8; }
+  .icon-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+
+  .canvas-wrap {
+    padding: 12px;
+    background: #0d1117;
+    flex-grow: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 220px;
+    cursor: zoom-in;
+  }
+  .canvas-wrap canvas {
+    max-width: 100%;
+    max-height: 320px;
+    display: block;
+    border-radius: 4px;
+    background: #1a1f2e;
+  }
+  .canvas-wrap.empty::after {
+    content: 'Нет данных';
+    color: #555;
+    font-size: 13px;
+  }
+  .canvas-wrap.empty canvas { display: none; }
+
+  .card-stats {
+    padding: 8px 16px;
+    background: #0d1117;
+    border-top: 1px solid #2a3446;
+    font-size: 11px;
+    color: #9aa0a6;
+    font-family: 'Consolas', monospace;
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px;
+    min-height: 30px;
+  }
+  .card-stats .stat { display: flex; gap: 4px; }
+  .card-stats .stat .k { color: #8ab4f8; }
+
+  /* ===== МОДАЛЬНОЕ ОКНО ===== */
+  .modal {
+    display: none;
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: rgba(0,0,0,0.92);
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+    padding: 30px;
+  }
+  .modal.active { display: flex; }
+  .modal-content {
+    position: relative;
+    max-width: 95%;
+    max-height: 95%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  .modal-content img, .modal-content canvas {
+    max-width: 100%;
+    max-height: 85vh;
+    border-radius: 6px;
+  }
+  .modal-close {
+    position: absolute;
+    top: -15px;
+    right: -15px;
+    background: #d93025;
+    color: #fff;
+    border: none;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 18px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .modal-title {
+    color: #8ab4f8;
+    margin-bottom: 12px;
+    font-size: 15px;
+    font-weight: 600;
   }
 
-  .footer { text-align: center; color: #888; font-size: 12px; margin-top: 30px; }
+  /* ===== ФУТЕР ===== */
+  .footer {
+    text-align: center;
+    color: #555;
+    font-size: 12px;
+    margin-top: 30px;
+    padding: 20px;
+    border-top: 1px solid #2a3446;
+  }
+
+  /* ===== АДАПТАЦИЯ ===== */
+  @media (max-width: 700px) {
+    .toolbar { flex-direction: column; align-items: stretch; }
+    .tool-group { width: 100%; }
+    input[type="file"], input[type="range"] { width: 100%; }
+    .progress-wrap { width: 100%; }
+    .images-grid { grid-template-columns: 1fr; }
+  }
 </style>
 </head>
 <body>
+
+<div class="header">
+  <h1>Обработка изображений следов</h1>
+  <div class="sub">Трасологическая экспертиза — цифровая обработка изображений</div>
+</div>
+
 <div class="container">
-  <h1>Программное решение для обработки изображений следов</h1>
-  <p class="subtitle">Трасологическая экспертиза — цифровая обработка изображений</p>
 
-  <div class="panel">
-    <div class="controls">
-      <label for="fileInput">Изображение следа:</label>
+  <!-- ПАНЕЛЬ УПРАВЛЕНИЯ -->
+  <div class="toolbar">
+    <div class="tool-group">
+      <label>Изображение следа</label>
       <input type="file" id="fileInput" accept="image/*">
-
-      <label for="blurRange">Сила фильтрации:</label>
-      <input type="range" id="blurRange" min="1" max="9" value="3" step="2">
-      <span class="range-value" id="blurValue">3</span>
-
-      <label for="morphRange">Морфология:</label>
-      <input type="range" id="morphRange" min="0" max="3" value="1" step="1">
-      <span class="range-value" id="morphValue">1</span>
-
-      <button id="processBtn" disabled>Обработать</button>
-      <button id="downloadBtn" disabled>Скачать результат</button>
-      <button id="resetBtn" disabled>Сбросить</button>
     </div>
-    <div id="status">Загрузка компонентов обработки... Пожалуйста, подождите.</div>
+
+    <div class="tool-group">
+      <label>Сила фильтрации</label>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <input type="range" id="blurRange" min="1" max="9" value="3" step="2">
+        <span class="range-val" id="blurValue">3</span>
+      </div>
+    </div>
+
+    <div class="tool-group">
+      <label>Морфология</label>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <input type="range" id="morphRange" min="0" max="3" value="1" step="1">
+        <span class="range-val" id="morphValue">1</span>
+      </div>
+    </div>
+
+    <div class="tool-group">
+      <label>Порог контуров</label>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <input type="range" id="edgeRange" min="20" max="200" value="100" step="10">
+        <span class="range-val" id="edgeValue">100</span>
+      </div>
+    </div>
+
+    <div class="tool-group">
+      <label>Макс. размер</label>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <input type="range" id="sizeRange" min="400" max="2000" value="1200" step="100">
+        <span class="range-val" id="sizeValue">1200</span>
+      </div>
+    </div>
+
+    <div class="tool-group" style="flex-direction:row;gap:10px;margin-left:auto;">
+      <button class="btn-primary" id="processBtn" disabled>Обработать</button>
+      <button class="btn-success" id="downloadAllBtn" disabled>Скачать все</button>
+      <button class="btn-secondary" id="resetBtn" disabled>Сбросить</button>
+    </div>
   </div>
 
-  <div class="images">
-    <div class="image-card"><h3>1. Исходное изображение</h3><canvas id="cvOriginal"></canvas></div>
-    <div class="image-card"><h3>2. Оттенки серого</h3><canvas id="cvGray"></canvas></div>
-    <div class="image-card"><h3>3. Фильтрация (устранение шума)</h3><canvas id="cvMedian"></canvas></div>
-    <div class="image-card"><h3>4. Выравнивание контраста</h3><canvas id="cvEnhanced"></canvas></div>
-    <div class="image-card"><h3>5. Бинаризация и морфология</h3><canvas id="cvBinary"></canvas></div>
-    <div class="image-card"><h3>6. Выделенные контуры следа</h3><canvas id="cvContours"></canvas></div>
+  <!-- СТАТУС -->
+  <div class="status-bar ready" id="statusBar">
+    <div id="statusText">Готово. Выберите изображение следа.</div>
+    <div class="progress-wrap" id="progressWrap">
+      <div class="progress-fill" id="progressFill"></div>
+    </div>
+  </div>
+
+  <!-- ИНФОРМАЦИЯ -->
+  <div class="info-bar" id="infoBar" style="display:none;">
+    <div class="info-item"><span class="label">Размер:</span><span class="value" id="infoSize">—</span></div>
+    <div class="info-item"><span class="label">Порог Оцу:</span><span class="value" id="infoThreshold">—</span></div>
+    <div class="info-item"><span class="label">Контуров:</span><span class="value" id="infoContours">—</span></div>
+    <div class="info-item"><span class="label">Время:</span><span class="value" id="infoTime">—</span></div>
+  </div>
+
+  <!-- СЕТКА ИЗОБРАЖЕНИЙ -->
+  <div class="images-grid" id="imagesGrid">
+    <div class="image-card" data-key="original">
+      <div class="card-header">
+        <h3><span class="step-num">1</span> Исходное изображение</h3>
+        <div class="card-actions">
+          <button class="icon-btn" data-action="zoom" data-key="original" title="Открыть" disabled>⤢</button>
+          <button class="icon-btn" data-action="download" data-key="original" title="Скачать" disabled>⬇</button>
+        </div>
+      </div>
+      <div class="canvas-wrap empty"><canvas id="cvOriginal"></canvas></div>
+      <div class="card-stats" id="statsOriginal">—</div>
+    </div>
+
+    <div class="image-card" data-key="gray">
+      <div class="card-header">
+        <h3><span class="step-num">2</span> Оттенки серого</h3>
+        <div class="card-actions">
+          <button class="icon-btn" data-action="zoom" data-key="gray" title="Открыть" disabled>⤢</button>
+          <button class="icon-btn" data-action="download" data-key="gray" title="Скачать" disabled>⬇</button>
+        </div>
+      </div>
+      <div class="canvas-wrap empty"><canvas id="cvGray"></canvas></div>
+      <div class="card-stats" id="statsGray">—</div>
+    </div>
+
+    <div class="image-card" data-key="median">
+      <div class="card-header">
+        <h3><span class="step-num">3</span> Фильтрация</h3>
+        <div class="card-actions">
+          <button class="icon-btn" data-action="zoom" data-key="median" title="Открыть" disabled>⤢</button>
+          <button class="icon-btn" data-action="download" data-key="median" title="Скачать" disabled>⬇</button>
+        </div>
+      </div>
+      <div class="canvas-wrap empty"><canvas id="cvMedian"></canvas></div>
+      <div class="card-stats" id="statsMedian">—</div>
+    </div>
+
+    <div class="image-card" data-key="enhanced">
+      <div class="card-header">
+        <h3><span class="step-num">4</span> Контраст</h3>
+        <div class="card-actions">
+          <button class="icon-btn" data-action="zoom" data-key="enhanced" title="Открыть" disabled>⤢</button>
+          <button class="icon-btn" data-action="download" data-key="enhanced" title="Скачать" disabled>⬇</button>
+        </div>
+      </div>
+      <div class="canvas-wrap empty"><canvas id="cvEnhanced"></canvas></div>
+      <div class="card-stats" id="statsEnhanced">—</div>
+    </div>
+
+    <div class="image-card" data-key="binary">
+      <div class="card-header">
+        <h3><span class="step-num">5</span> Бинаризация</h3>
+        <div class="card-actions">
+          <button class="icon-btn" data-action="zoom" data-key="binary" title="Открыть" disabled>⤢</button>
+          <button class="icon-btn" data-action="download" data-key="binary" title="Скачать" disabled>⬇</button>
+        </div>
+      </div>
+      <div class="canvas-wrap empty"><canvas id="cvBinary"></canvas></div>
+      <div class="card-stats" id="statsBinary">—</div>
+    </div>
+
+    <div class="image-card" data-key="contours">
+      <div class="card-header">
+        <h3><span class="step-num">6</span> Контуры следа</h3>
+        <div class="card-actions">
+          <button class="icon-btn" data-action="zoom" data-key="contours" title="Открыть" disabled>⤢</button>
+          <button class="icon-btn" data-action="download" data-key="contours" title="Скачать" disabled>⬇</button>
+        </div>
+      </div>
+      <div class="canvas-wrap empty"><canvas id="cvContours"></canvas></div>
+      <div class="card-stats" id="statsContours">—</div>
+    </div>
   </div>
 
   <div class="footer">Курсовая работа — методы цифровой обработки изображений в трасологической экспертизе</div>
 </div>
 
+<!-- МОДАЛЬНОЕ ОКНО -->
+<div class="modal" id="modal">
+  <div class="modal-content">
+    <button class="modal-close" id="modalClose">×</button>
+    <div class="modal-title" id="modalTitle">Изображение</div>
+    <canvas id="modalCanvas"></canvas>
+  </div>
+</div>
+
 <script>
 // ============================================================
-// ОБРАБОТКА ИЗОБРАЖЕНИЙ НА ЧИСТОМ JAVASCRIPT
-// Без внешних библиотек, без CDN, без OpenCV
+// ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ
 // ============================================================
-
 let sourceImageData = null;
-let processedCanvas = null;
-let cvReady = true; // у нас нет внешних зависимостей, всегда готовы
+let resultCanvases = {}; // key -> canvas
+let isProcessing = false;
+
+const CANVAS_IDS = {
+  original: 'cvOriginal',
+  gray: 'cvGray',
+  median: 'cvMedian',
+  enhanced: 'cvEnhanced',
+  binary: 'cvBinary',
+  contours: 'cvContours'
+};
+
+const STATS_IDS = {
+  original: 'statsOriginal',
+  gray: 'statsGray',
+  median: 'statsMedian',
+  enhanced: 'statsEnhanced',
+  binary: 'statsBinary',
+  contours: 'statsContours'
+};
 
 // ============================================================
-// ИНИЦИАЛИЗАЦИЯ
+// СТАТУС И ПРОГРЕСС
 // ============================================================
-function showStatus(text, isError, mode) {
-  const el = document.getElementById('status');
-  el.textContent = text;
-  el.className = '';
-  if (isError) el.className = 'error';
-  else if (mode === 'working') el.className = 'working';
+function setStatus(text, mode) {
+  const bar = document.getElementById('statusBar');
+  const txt = document.getElementById('statusText');
+  txt.textContent = text;
+  bar.className = 'status-bar';
+  if (mode === 'error') bar.classList.add('error');
+  else if (mode === 'working') bar.classList.add('working');
+  else bar.classList.add('ready');
 }
 
-showStatus('Готово. Выберите изображение следа.', false, 'ready');
-document.getElementById('fileInput').disabled = false;
+function setProgress(percent) {
+  const wrap = document.getElementById('progressWrap');
+  const fill = document.getElementById('progressFill');
+  if (percent === null) {
+    wrap.classList.remove('active');
+  } else {
+    wrap.classList.add('active');
+    fill.style.width = percent + '%';
+  }
+}
 
 // ============================================================
 // ВЫБОР ФАЙЛА
@@ -142,141 +556,140 @@ document.getElementById('fileInput').addEventListener('change', function(e) {
   const file = e.target.files[0];
   if (!file) return;
 
-  showStatus('Чтение файла...', false, 'working');
+  setStatus('Чтение файла...', 'working');
+  setProgress(10);
 
   const reader = new FileReader();
   reader.onload = function(event) {
     const img = new Image();
     img.onload = function() {
-      // Уменьшаем изображение до 1200 px по большей стороне
-      const MAX_SIZE = 1200;
-      let w = img.width;
-      let h = img.height;
+      const MAX_SIZE = parseInt(document.getElementById('sizeRange').value, 10);
+      let w = img.width, h = img.height;
       if (w > MAX_SIZE || h > MAX_SIZE) {
-        if (w > h) {
-          h = Math.round(h * MAX_SIZE / w);
-          w = MAX_SIZE;
-        } else {
-          w = Math.round(w * MAX_SIZE / h);
-          h = MAX_SIZE;
-        }
+        if (w > h) { h = Math.round(h * MAX_SIZE / w); w = MAX_SIZE; }
+        else { w = Math.round(w * MAX_SIZE / h); h = MAX_SIZE; }
       }
 
-      // Рисуем на временном canvas
       const tmp = document.createElement('canvas');
-      tmp.width = w;
-      tmp.height = h;
+      tmp.width = w; tmp.height = h;
       const ctx = tmp.getContext('2d', { willReadFrequently: true });
       ctx.drawImage(img, 0, 0, w, h);
-
       sourceImageData = ctx.getImageData(0, 0, w, h);
 
-      // Показываем исходное изображение
-      const origCanvas = document.getElementById('cvOriginal');
-      origCanvas.width = w;
-      origCanvas.height = h;
-      origCanvas.getContext('2d').putImageData(sourceImageData, 0, 0);
+      // Сбрасываем старые результаты
+      resetResults();
 
-      // Очищаем остальные canvas
-      ['cvGray','cvMedian','cvEnhanced','cvBinary','cvContours'].forEach(function(id) {
-        const c = document.getElementById(id);
-        c.width = w;
-        c.height = h;
-        c.getContext('2d').clearRect(0, 0, w, h);
+      // Рисуем исходное
+      const origCanvas = document.getElementById('cvOriginal');
+      origCanvas.width = w; origCanvas.height = h;
+      origCanvas.getContext('2d').putImageData(sourceImageData, 0, 0);
+      resultCanvases.original = origCanvas;
+
+      // Активируем карточку исходного
+      activateCard('original');
+      updateStats('original', {
+        'Размер': w + '×' + h,
+        'Пикселей': (w * h).toLocaleString('ru-RU')
       });
 
-      // Активируем контролы
-      document.getElementById('processBtn').disabled = false;
-      document.getElementById('downloadBtn').disabled = true;
-      document.getElementById('resetBtn').disabled = false;
+      setProgress(100);
+      setStatus('Изображение загружено: ' + w + '×' + h + '. Нажмите «Обработать».', 'ready');
 
-      showStatus('Изображение загружено: ' + w + '×' + h + ' пикселей. Нажмите «Обработать».', false, 'ready');
+      document.getElementById('processBtn').disabled = false;
+      document.getElementById('resetBtn').disabled = false;
+      document.getElementById('downloadAllBtn').disabled = true;
+
+      // Включаем кнопки для исходного
+      enableCardButtons('original');
+
+      setTimeout(() => setProgress(null), 800);
     };
-    img.onerror = function() {
-      showStatus('Ошибка: не удалось прочитать изображение.', true);
-    };
+    img.onerror = () => { setStatus('Ошибка: не удалось прочитать изображение.', 'error'); setProgress(null); };
     img.src = event.target.result;
   };
-  reader.onerror = function() {
-    showStatus('Ошибка чтения файла.', true);
-  };
+  reader.onerror = () => { setStatus('Ошибка чтения файла.', 'error'); setProgress(null); };
   reader.readAsDataURL(file);
 });
 
 // ============================================================
-// ОБНОВЛЕНИЕ ЗНАЧЕНИЙ ПОЛЗУНКОВ
+// ПОЛЗУНКИ
 // ============================================================
-document.getElementById('blurRange').addEventListener('input', function() {
-  document.getElementById('blurValue').textContent = this.value;
-});
-document.getElementById('morphRange').addEventListener('input', function() {
-  document.getElementById('morphValue').textContent = this.value;
+['blur', 'morph', 'edge', 'size'].forEach(function(name) {
+  const range = document.getElementById(name + 'Range');
+  const val = document.getElementById(name + 'Value');
+  range.addEventListener('input', function() {
+    val.textContent = this.value;
+    // Если меняем размер — нужно перезагрузить изображение
+    if (name === 'size' && sourceImageData) {
+      setStatus('Изменён максимальный размер. Перезагрузите изображение.', 'working');
+    }
+  });
 });
 
 // ============================================================
 // ОБРАБОТКА
 // ============================================================
 document.getElementById('processBtn').addEventListener('click', function() {
-  if (!sourceImageData) { showStatus('Сначала загрузите изображение.', true); return; }
-
+  if (!sourceImageData || isProcessing) return;
+  isProcessing = true;
   document.getElementById('processBtn').disabled = true;
-  document.getElementById('downloadBtn').disabled = true;
+  document.getElementById('downloadAllBtn').disabled = true;
 
-  // Даём браузеру отрисовать интерфейс перед тяжёлой работой
-  setTimeout(function() {
+  setTimeout(() => {
     try {
       processImage();
     } catch (err) {
       console.error(err);
-      showStatus('Ошибка обработки: ' + err.message, true);
+      setStatus('Ошибка обработки: ' + err.message, 'error');
+      setProgress(null);
+    } finally {
+      isProcessing = false;
       document.getElementById('processBtn').disabled = false;
     }
-  }, 60);
+  }, 80);
 });
 
 function processImage() {
   const blurSize = parseInt(document.getElementById('blurRange').value, 10);
   const morphIter = parseInt(document.getElementById('morphRange').value, 10);
+  const edgeThreshold = parseInt(document.getElementById('edgeRange').value, 10);
   const w = sourceImageData.width;
   const h = sourceImageData.height;
+  const t0 = performance.now();
 
-  // ---------- Шаг 1. Загрузка ----------
-  showStatus('Шаг 1/6: подготовка изображения...', false, 'working');
   const srcData = sourceImageData.data;
 
   // ---------- Шаг 2. Оттенки серого ----------
-  showStatus('Шаг 2/6: перевод в оттенки серого...', false, 'working');
+  setStatus('Шаг 2/6: перевод в оттенки серого...', 'working');
+  setProgress(15);
   const grayData = new Uint8ClampedArray(w * h * 4);
-  const grayValues = new Uint8ClampedArray(w * h); // массив яркостей (1 канал)
+  const grayValues = new Uint8ClampedArray(w * h);
   for (let i = 0; i < w * h; i++) {
-    const r = srcData[i * 4];
-    const g = srcData[i * 4 + 1];
-    const b = srcData[i * 4 + 2];
-    // Формула яркости (стандарт ITU-R BT.601)
-    const val = Math.round(0.299 * r + 0.587 * g + 0.114 * b);
-    grayValues[i] = val;
-    grayData[i * 4] = val;
-    grayData[i * 4 + 1] = val;
-    grayData[i * 4 + 2] = val;
+    const r = srcData[i * 4], g = srcData[i * 4 + 1], b = srcData[i * 4 + 2];
+    const v = Math.round(0.299 * r + 0.587 * g + 0.114 * b);
+    grayValues[i] = v;
+    grayData[i * 4] = grayData[i * 4 + 1] = grayData[i * 4 + 2] = v;
     grayData[i * 4 + 3] = 255;
   }
-  putImageDataToCanvas(grayData, w, h, 'cvGray');
+  drawToCanvas(grayData, w, h, 'gray');
+  updateStats('gray', { 'Размер': w + '×' + h, 'Каналов': '1 (яркость)' });
 
   // ---------- Шаг 3. Медианная фильтрация ----------
-  showStatus('Шаг 3/6: медианная фильтрация (устранение шума)...', false, 'working');
+  setStatus('Шаг 3/6: медианная фильтрация (устранение шума)...', 'working');
+  setProgress(30);
   const medianValues = medianBlur(grayValues, w, h, blurSize);
   const medianData = new Uint8ClampedArray(w * h * 4);
   for (let i = 0; i < w * h; i++) {
     const v = medianValues[i];
-    medianData[i * 4] = v;
-    medianData[i * 4 + 1] = v;
-    medianData[i * 4 + 2] = v;
+    medianData[i * 4] = medianData[i * 4 + 1] = medianData[i * 4 + 2] = v;
     medianData[i * 4 + 3] = 255;
   }
-  putImageDataToCanvas(medianData, w, h, 'cvMedian');
+  drawToCanvas(medianData, w, h, 'median');
+  updateStats('median', { 'Ядро': blurSize + '×' + blurSize, 'Метод': 'медиана' });
 
-  // ---------- Шаг 4. Выравнивание контраста (нормализация) ----------
-  showStatus('Шаг 4/6: выравнивание контраста...', false, 'working');
+  // ---------- Шаг 4. Выравнивание контраста ----------
+  setStatus('Шаг 4/6: выравнивание контраста...', 'working');
+  setProgress(45);
   let minVal = 255, maxVal = 0;
   for (let i = 0; i < w * h; i++) {
     const v = medianValues[i];
@@ -285,108 +698,145 @@ function processImage() {
   }
   const range = Math.max(1, maxVal - minVal);
   const enhancedValues = new Uint8ClampedArray(w * h);
-  for (let i = 0; i < w * h; i++) {
-    enhancedValues[i] = Math.round((medianValues[i] - minVal) * 255 / range);
-  }
   const enhancedData = new Uint8ClampedArray(w * h * 4);
   for (let i = 0; i < w * h; i++) {
-    const v = enhancedValues[i];
-    enhancedData[i * 4] = v;
-    enhancedData[i * 4 + 1] = v;
-    enhancedData[i * 4 + 2] = v;
+    const v = Math.round((medianValues[i] - minVal) * 255 / range);
+    enhancedValues[i] = v;
+    enhancedData[i * 4] = enhancedData[i * 4 + 1] = enhancedData[i * 4 + 2] = v;
     enhancedData[i * 4 + 3] = 255;
   }
-  putImageDataToCanvas(enhancedData, w, h, 'cvEnhanced');
+  drawToCanvas(enhancedData, w, h, 'enhanced');
+  updateStats('enhanced', { 'Мин': minVal, 'Макс': maxVal, 'Диапазон': range });
 
-  // ---------- Шаг 5. Бинаризация (метод Оцу) + Морфология ----------
-  showStatus('Шаг 5/6: бинаризация и морфологическая обработка...', false, 'working');
+  // ---------- Шаг 5. Бинаризация + морфология ----------
+  setStatus('Шаг 5/6: бинаризация и морфологическая обработка...', 'working');
+  setProgress(65);
   const threshold = otsuThreshold(enhancedValues, w * h);
   const binaryValues = new Uint8ClampedArray(w * h);
   for (let i = 0; i < w * h; i++) {
     binaryValues[i] = enhancedValues[i] > threshold ? 255 : 0;
   }
-  // Морфология: закрытие (заполнение разрывов) + открытие (удаление шума)
   let morphValues = binaryValues;
   if (morphIter > 0) {
-    morphValues = morphology(morphValues, w, h, 'close', morphIter);
+    morphValues = morphology(binaryValues, w, h, 'close', morphIter);
     morphValues = morphology(morphValues, w, h, 'open', morphIter);
   }
   const morphData = new Uint8ClampedArray(w * h * 4);
   for (let i = 0; i < w * h; i++) {
     const v = morphValues[i];
-    morphData[i * 4] = v;
-    morphData[i * 4 + 1] = v;
-    morphData[i * 4 + 2] = v;
+    morphData[i * 4] = morphData[i * 4 + 1] = morphData[i * 4 + 2] = v;
     morphData[i * 4 + 3] = 255;
   }
-  putImageDataToCanvas(morphData, w, h, 'cvBinary');
+  drawToCanvas(morphData, w, h, 'binary');
+  updateStats('binary', { 'Порог Оцу': threshold, 'Итераций': morphIter });
 
-  // ---------- Шаг 6. Выделение контуров ----------
-  showStatus('Шаг 6/6: выделение контуров следа...', false, 'working');
-  // Создаём контурное изображение: накладываем контуры на исходное
-  const contoursData = new Uint8ClampedArray(srcData); // копия исходного
-  const edges = sobelEdges(morphValues, w, h);
+  // ---------- Шаг 6. Контуры ----------
+  setStatus('Шаг 6/6: выделение контуров следа...', 'working');
+  setProgress(85);
+  const contoursData = new Uint8ClampedArray(srcData);
+  const edges = sobelEdges(morphValues, w, h, edgeThreshold);
   let edgeCount = 0;
   for (let i = 0; i < w * h; i++) {
     if (edges[i] > 0) {
       edgeCount++;
-      // Красим контурные пиксели в ярко-красный
       contoursData[i * 4] = 255;
-      contoursData[i * 4 + 1] = 0;
-      contoursData[i * 4 + 2] = 0;
+      contoursData[i * 4 + 1] = 30;
+      contoursData[i * 4 + 2] = 30;
       contoursData[i * 4 + 3] = 255;
     }
   }
-  putImageDataToCanvas(contoursData, w, h, 'cvContours');
+  drawToCanvas(contoursData, w, h, 'contours');
+  updateStats('contours', { 'Контуров': edgeCount.toLocaleString('ru-RU'), 'Порог': edgeThreshold });
 
-  processedCanvas = document.getElementById('cvContours');
-  document.getElementById('downloadBtn').disabled = false;
-  showStatus('Обработка завершена. Найдено контурных пикселей: ' + edgeCount + '. Можно скачать результат.', false, 'ready');
-  document.getElementById('processBtn').disabled = false;
+  // ---------- Завершение ----------
+  const elapsed = Math.round(performance.now() - t0);
+  document.getElementById('infoBar').style.display = 'flex';
+  document.getElementById('infoSize').textContent = w + '×' + h;
+  document.getElementById('infoThreshold').textContent = threshold;
+  document.getElementById('infoContours').textContent = edgeCount.toLocaleString('ru-RU');
+  document.getElementById('infoTime').textContent = elapsed + ' мс';
+
+  setProgress(100);
+  setStatus('Обработка завершена за ' + elapsed + ' мс. Контуров: ' + edgeCount + '.', 'ready');
+  document.getElementById('downloadAllBtn').disabled = false;
+
+  setTimeout(() => setProgress(null), 1000);
 }
 
 // ============================================================
-// ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ОБРАБОТКИ
+// ОТРИСОВКА
 // ============================================================
+function drawToCanvas(data, w, h, key) {
+  const canvas = document.getElementById(CANVAS_IDS[key]);
+  canvas.width = w; canvas.height = h;
+  canvas.getContext('2d').putImageData(new ImageData(data, w, h), 0, 0);
+  resultCanvases[key] = canvas;
 
-// Запись ImageData в canvas
-function putImageDataToCanvas(data, w, h, canvasId) {
-  const canvas = document.getElementById(canvasId);
-  canvas.width = w;
-  canvas.height = h;
-  const imageData = new ImageData(data, w, h);
-  canvas.getContext('2d').putImageData(imageData, 0, 0);
+  // Убираем "empty" у обёртки
+  const wrap = canvas.parentElement;
+  wrap.classList.remove('empty');
+
+  activateCard(key);
+  enableCardButtons(key);
 }
 
-// Медианная фильтрация
+function activateCard(key) {
+  document.querySelectorAll('.image-card').forEach(c => c.classList.remove('active'));
+  const card = document.querySelector('.image-card[data-key="' + key + '"]');
+  if (card) card.classList.add('active');
+}
+
+function enableCardButtons(key) {
+  document.querySelectorAll('.icon-btn[data-key="' + key + '"]').forEach(btn => {
+    btn.disabled = false;
+  });
+}
+
+function updateStats(key, stats) {
+  const el = document.getElementById(STATS_IDS[key]);
+  if (!el) return;
+  el.innerHTML = Object.keys(stats).map(k =>
+    '<div class="stat"><span class="k">' + k + ':</span><span>' + stats[k] + '</span></div>'
+  ).join('');
+}
+
+// ============================================================
+// ВСПОМОГАТЕЛЬНЫЕ АЛГОРИТМЫ
+// ============================================================
+
 function medianBlur(values, w, h, kernelSize) {
   const result = new Uint8ClampedArray(w * h);
   const radius = Math.floor(kernelSize / 2);
+  const windowSize = kernelSize * kernelSize;
+  const window = new Uint8ClampedArray(windowSize);
   for (let y = 0; y < h; y++) {
     for (let x = 0; x < w; x++) {
-      const window = [];
+      let count = 0;
       for (let dy = -radius; dy <= radius; dy++) {
+        const ny = y + dy;
+        if (ny < 0 || ny >= h) continue;
         for (let dx = -radius; dx <= radius; dx++) {
-          const ny = y + dy;
           const nx = x + dx;
-          if (ny >= 0 && ny < h && nx >= 0 && nx < w) {
-            window.push(values[ny * w + nx]);
-          }
+          if (nx < 0 || nx >= w) continue;
+          window[count++] = values[ny * w + nx];
         }
       }
-      window.sort(function(a, b) { return a - b; });
-      result[y * w + x] = window[Math.floor(window.length / 2)];
+      // Сортировка вставками
+      for (let i = 1; i < count; i++) {
+        const key = window[i];
+        let j = i - 1;
+        while (j >= 0 && window[j] > key) { window[j + 1] = window[j]; j--; }
+        window[j + 1] = key;
+      }
+      result[y * w + x] = window[Math.floor(count / 2)];
     }
   }
   return result;
 }
 
-// Порог Оцу
 function otsuThreshold(values, total) {
   const hist = new Array(256).fill(0);
-  for (let i = 0; i < total; i++) {
-    hist[values[i]]++;
-  }
+  for (let i = 0; i < total; i++) hist[values[i]]++;
   let sum = 0;
   for (let i = 0; i < 256; i++) sum += i * hist[i];
   let sumB = 0, wB = 0, maxVar = 0, threshold = 0;
@@ -399,96 +849,57 @@ function otsuThreshold(values, total) {
     const mB = sumB / wB;
     const mF = (sum - sumB) / wF;
     const between = wB * wF * (mB - mF) * (mB - mF);
-    if (between > maxVar) {
-      maxVar = between;
-      threshold = i;
-    }
+    if (between > maxVar) { maxVar = between; threshold = i; }
   }
   return threshold;
 }
 
-// Морфологические операции
 function morphology(values, w, h, operation, iterations) {
   let result = new Uint8ClampedArray(values);
   for (let iter = 0; iter < iterations; iter++) {
+    // Шаг 1: dilate или erode
     const temp = new Uint8ClampedArray(w * h);
+    const isDilate = (operation === 'close');
     for (let y = 0; y < h; y++) {
       for (let x = 0; x < w; x++) {
-        const idx = y * w + x;
-        let val;
-        if (operation === 'dilate') {
-          // Dilate: если хотя бы один сосед белый — пиксель становится белым
-          val = 0;
-          for (let dy = -1; dy <= 1; dy++) {
-            for (let dx = -1; dx <= 1; dx++) {
-              const ny = y + dy, nx = x + dx;
-              if (ny >= 0 && ny < h && nx >= 0 && nx < w) {
-                if (values[ny * w + nx] === 255) val = 255;
-              }
-            }
-          }
-        } else if (operation === 'erode') {
-          // Erode: если хотя бы один сосед чёрный — пиксель становится чёрным
-          val = 255;
-          for (let dy = -1; dy <= 1; dy++) {
-            for (let dx = -1; dx <= 1; dx++) {
-              const ny = y + dy, nx = x + dx;
-              if (ny >= 0 && ny < h && nx >= 0 && nx < w) {
-                if (values[ny * w + nx] === 0) val = 0;
-              }
+        let val = isDilate ? 0 : 255;
+        for (let dy = -1; dy <= 1; dy++) {
+          for (let dx = -1; dx <= 1; dx++) {
+            const ny = y + dy, nx = x + dx;
+            if (ny >= 0 && ny < h && nx >= 0 && nx < w) {
+              const v = result[ny * w + nx];
+              if (isDilate && v === 255) val = 255;
+              if (!isDilate && v === 0) val = 0;
             }
           }
         }
-        temp[idx] = val;
+        temp[y * w + x] = val;
       }
     }
-    // Закрытие = dilate затем erode
-    // Открытие = erode затем dilate
-    if (operation === 'close') {
-      result = temp;
-      // Затем erode
-      const temp2 = new Uint8ClampedArray(w * h);
-      for (let y = 0; y < h; y++) {
-        for (let x = 0; x < w; x++) {
-          let val = 255;
-          for (let dy = -1; dy <= 1; dy++) {
-            for (let dx = -1; dx <= 1; dx++) {
-              const ny = y + dy, nx = x + dx;
-              if (ny >= 0 && ny < h && nx >= 0 && nx < w) {
-                if (result[ny * w + nx] === 0) val = 0;
-              }
+    // Шаг 2: обратная операция
+    const temp2 = new Uint8ClampedArray(w * h);
+    for (let y = 0; y < h; y++) {
+      for (let x = 0; x < w; x++) {
+        let val = isDilate ? 255 : 0;
+        for (let dy = -1; dy <= 1; dy++) {
+          for (let dx = -1; dx <= 1; dx++) {
+            const ny = y + dy, nx = x + dx;
+            if (ny >= 0 && ny < h && nx >= 0 && nx < w) {
+              const v = temp[ny * w + nx];
+              if (isDilate && v === 0) val = 0;
+              if (!isDilate && v === 255) val = 255;
             }
           }
-          temp2[y * w + x] = val;
         }
+        temp2[y * w + x] = val;
       }
-      result = temp2;
-    } else if (operation === 'open') {
-      result = temp; // erode
-      // Затем dilate
-      const temp2 = new Uint8ClampedArray(w * h);
-      for (let y = 0; y < h; y++) {
-        for (let x = 0; x < w; x++) {
-          let val = 0;
-          for (let dy = -1; dy <= 1; dy++) {
-            for (let dx = -1; dx <= 1; dx++) {
-              const ny = y + dy, nx = x + dx;
-              if (ny >= 0 && ny < h && nx >= 0 && nx < w) {
-                if (result[ny * w + nx] === 255) val = 255;
-              }
-            }
-          }
-          temp2[y * w + x] = val;
-        }
-      }
-      result = temp2;
     }
+    result = temp2;
   }
   return result;
 }
 
-// Оператор Собеля для выделения границ
-function sobelEdges(values, w, h) {
+function sobelEdges(values, w, h, threshold) {
   const result = new Uint8ClampedArray(w * h);
   const Gx = [[-1, 0, 1], [-2, 0, 2], [-1, 0, 1]];
   const Gy = [[-1, -2, -1], [0, 0, 0], [1, 2, 1]];
@@ -502,22 +913,89 @@ function sobelEdges(values, w, h) {
           sumY += val * Gy[dy + 1][dx + 1];
         }
       }
-      const magnitude = Math.sqrt(sumX * sumX + sumY * sumY);
-      result[y * w + x] = magnitude > 100 ? 255 : 0;
+      const mag = Math.sqrt(sumX * sumX + sumY * sumY);
+      result[y * w + x] = mag > threshold ? 255 : 0;
     }
   }
   return result;
 }
 
 // ============================================================
-// СКАЧИВАНИЕ РЕЗУЛЬТАТА
+// КНОПКИ НА КАРТОЧКАХ (скачать / открыть)
 // ============================================================
-document.getElementById('downloadBtn').addEventListener('click', function() {
-  if (!processedCanvas) return;
-  const link = document.createElement('a');
-  link.download = 'result_contours.png';
-  link.href = processedCanvas.toDataURL('image/png');
-  link.click();
+document.querySelectorAll('.icon-btn').forEach(btn => {
+  btn.addEventListener('click', function(e) {
+    e.stopPropagation();
+    const key = this.dataset.key;
+    const action = this.dataset.action;
+    const canvas = resultCanvases[key];
+    if (!canvas) return;
+
+    if (action === 'download') {
+      const link = document.createElement('a');
+      link.download = key + '_result.png';
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+    } else if (action === 'zoom') {
+      openModal(key, canvas);
+    }
+  });
+});
+
+// Клик по canvas — открыть в модальном окне
+document.querySelectorAll('.canvas-wrap').forEach(wrap => {
+  wrap.addEventListener('click', function() {
+    const card = this.closest('.image-card');
+    const key = card.dataset.key;
+    const canvas = resultCanvases[key];
+    if (canvas) openModal(key, canvas);
+  });
+});
+
+// ============================================================
+// МОДАЛЬНОЕ ОКНО
+// ============================================================
+function openModal(key, sourceCanvas) {
+  const modal = document.getElementById('modal');
+  const modalCanvas = document.getElementById('modalCanvas');
+  const title = document.getElementById('modalTitle');
+  const titles = {
+    original: 'Исходное изображение',
+    gray: 'Оттенки серого',
+    median: 'Фильтрация',
+    enhanced: 'Выравнивание контраста',
+    binary: 'Бинаризация и морфология',
+    contours: 'Выделенные контуры следа'
+  };
+  title.textContent = titles[key] || key;
+  modalCanvas.width = sourceCanvas.width;
+  modalCanvas.height = sourceCanvas.height;
+  modalCanvas.getContext('2d').drawImage(sourceCanvas, 0, 0);
+  modal.classList.add('active');
+}
+
+document.getElementById('modalClose').addEventListener('click', () => {
+  document.getElementById('modal').classList.remove('active');
+});
+document.getElementById('modal').addEventListener('click', function(e) {
+  if (e.target === this) this.classList.remove('active');
+});
+
+// ============================================================
+// СКАЧАТЬ ВСЁ
+// ============================================================
+document.getElementById('downloadAllBtn').addEventListener('click', function() {
+  const keys = ['original', 'gray', 'median', 'enhanced', 'binary', 'contours'];
+  keys.forEach((key, i) => {
+    const canvas = resultCanvases[key];
+    if (!canvas) return;
+    setTimeout(() => {
+      const link = document.createElement('a');
+      link.download = (i + 1) + '_' + key + '.png';
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+    }, i * 250);
+  });
 });
 
 // ============================================================
@@ -525,17 +1003,32 @@ document.getElementById('downloadBtn').addEventListener('click', function() {
 // ============================================================
 document.getElementById('resetBtn').addEventListener('click', function() {
   sourceImageData = null;
-  processedCanvas = null;
+  resultCanvases = {};
   document.getElementById('fileInput').value = '';
-  ['cvOriginal','cvGray','cvMedian','cvEnhanced','cvBinary','cvContours'].forEach(function(id) {
-    const c = document.getElementById(id);
-    c.getContext('2d').clearRect(0, 0, c.width, c.height);
-  });
   document.getElementById('processBtn').disabled = true;
-  document.getElementById('downloadBtn').disabled = true;
+  document.getElementById('downloadAllBtn').disabled = true;
   document.getElementById('resetBtn').disabled = true;
-  showStatus('Сброшено. Выберите новое изображение.', false, 'ready');
+  document.getElementById('infoBar').style.display = 'none';
+
+  resetResults();
+  setStatus('Сброшено. Выберите новое изображение.', 'ready');
+  setProgress(null);
 });
+
+function resetResults() {
+  Object.keys(CANVAS_IDS).forEach(key => {
+    const canvas = document.getElementById(CANVAS_IDS[key]);
+    canvas.width = 0; canvas.height = 0;
+    canvas.parentElement.classList.add('empty');
+    const statsEl = document.getElementById(STATS_IDS[key]);
+    if (statsEl) statsEl.textContent = '—';
+    document.querySelectorAll('.icon-btn[data-key="' + key + '"]').forEach(b => b.disabled = true);
+  });
+  document.querySelectorAll('.image-card').forEach(c => c.classList.remove('active'));
+}
+
+// Инициализация
+resetResults();
 </script>
 </body>
 </html>
