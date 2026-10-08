@@ -3,494 +3,474 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Обработка изображений следов — трасологическая экспертиза</title>
+<title>Экспертная обработка изображений следов</title>
 <style>
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body {
-    font-family: 'Segoe UI', Tahoma, Arial, sans-serif;
-    background: #0f1419;
-    color: #e6e6e6;
-    min-height: 100vh;
-    padding: 0;
-  }
-
-  /* ===== ШАПКА ===== */
-  .header {
-    background: linear-gradient(135deg, #1a3d6d 0%, #0d2440 100%);
-    padding: 20px 30px;
-    border-bottom: 2px solid #1a73e8;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.4);
-  }
-  .header h1 { font-size: 22px; color: #fff; font-weight: 600; }
-  .header .sub { color: #8ab4f8; font-size: 13px; margin-top: 4px; }
-
-  /* ===== ОСНОВНОЙ КОНТЕЙНЕР ===== */
-  .container { max-width: 1500px; margin: 0 auto; padding: 20px; }
-
-  /* ===== ПАНЕЛЬ УПРАВЛЕНИЯ ===== */
-  .toolbar {
-    background: #1a1f2e;
-    border-radius: 10px;
-    padding: 20px;
-    margin-bottom: 20px;
-    border: 1px solid #2a3446;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 18px;
-    align-items: center;
-  }
-  .tool-group {
-    display: flex;
-    flex-direction: column;
-    gap: 5px;
-  }
-  .tool-group label {
-    font-size: 11px;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    color: #8ab4f8;
-    font-weight: 600;
-  }
-  input[type="file"] {
-    padding: 8px 12px;
-    background: #0d1117;
-    border: 1px solid #2a3446;
-    border-radius: 6px;
-    color: #e6e6e6;
-    font-size: 13px;
-    cursor: pointer;
-    min-width: 220px;
-  }
-  input[type="file"]::file-selector-button {
-    background: #1a73e8;
-    color: #fff;
-    border: none;
-    padding: 6px 12px;
-    border-radius: 4px;
-    cursor: pointer;
-    margin-right: 10px;
-    font-size: 12px;
-    font-weight: 600;
-  }
-  input[type="range"] {
-    width: 130px;
-    accent-color: #1a73e8;
-    cursor: pointer;
-  }
-  .range-val {
-    display: inline-block;
-    min-width: 32px;
-    text-align: center;
-    background: #0d1117;
-    border: 1px solid #2a3446;
-    border-radius: 4px;
-    padding: 3px 6px;
-    font-size: 12px;
-    color: #8ab4f8;
-    font-weight: 600;
-  }
-
-  button {
-    padding: 10px 20px;
-    font-size: 14px;
-    font-weight: 600;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-    transition: all 0.2s;
-    font-family: inherit;
-  }
-  button:disabled { opacity: 0.35; cursor: not-allowed; }
-  .btn-primary { background: #1a73e8; color: #fff; }
-  .btn-primary:hover:not(:disabled) { background: #2b82f0; box-shadow: 0 0 12px rgba(26,115,232,0.5); }
-  .btn-success { background: #1e8e3e; color: #fff; }
-  .btn-success:hover:not(:disabled) { background: #25a34a; box-shadow: 0 0 12px rgba(30,142,62,0.5); }
-  .btn-secondary { background: #3c4043; color: #e6e6e6; }
-  .btn-secondary:hover:not(:disabled) { background: #4a4e51; }
-
-  /* ===== СТАТУС И ПРОГРЕСС ===== */
-  .status-bar {
-    background: #1a1f2e;
-    border-radius: 8px;
-    padding: 14px 18px;
-    margin-bottom: 20px;
-    border-left: 4px solid #1a73e8;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 10px;
-  }
-  #statusText { font-size: 14px; color: #e6e6e6; }
-  .status-bar.error { border-left-color: #d93025; background: #2a1518; }
-  .status-bar.error #statusText { color: #f28b82; }
-  .status-bar.working { border-left-color: #fbbc04; }
-  .status-bar.working #statusText { color: #fdd663; }
-  .status-bar.ready { border-left-color: #1e8e3e; }
-
-  .progress-wrap {
-    width: 220px;
-    height: 6px;
-    background: #0d1117;
-    border-radius: 3px;
-    overflow: hidden;
-    display: none;
-  }
-  .progress-wrap.active { display: block; }
-  .progress-fill {
-    height: 100%;
-    width: 0%;
-    background: linear-gradient(90deg, #1a73e8, #8ab4f8);
-    transition: width 0.3s;
-  }
-
-  /* ===== ИНФО О ИЗОБРАЖЕНИИ ===== */
-  .info-bar {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 15px;
-    background: #1a1f2e;
-    border-radius: 8px;
-    padding: 12px 18px;
-    margin-bottom: 20px;
-    font-size: 13px;
-    border: 1px solid #2a3446;
-  }
-  .info-item { display: flex; gap: 6px; align-items: center; }
-  .info-item .label { color: #8ab4f8; font-weight: 600; }
-  .info-item .value { color: #e6e6e6; font-family: 'Consolas', monospace; }
-
-  /* ===== СЕТКА ИЗОБРАЖЕНИЙ ===== */
-  .images-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-    gap: 16px;
-  }
-  .image-card {
-    background: #1a1f2e;
-    border-radius: 10px;
-    overflow: hidden;
-    border: 1px solid #2a3446;
-    transition: border-color 0.2s, transform 0.2s;
-    display: flex;
-    flex-direction: column;
-  }
-  .image-card:hover {
-    border-color: #1a73e8;
-    transform: translateY(-2px);
-  }
-  .image-card.active { border-color: #1a73e8; box-shadow: 0 0 0 1px #1a73e8; }
-
-  .card-header {
-    padding: 12px 16px;
-    background: #0d1117;
-    border-bottom: 1px solid #2a3446;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-  .card-header h3 {
-    font-size: 13px;
-    font-weight: 600;
-    color: #8ab4f8;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-  .step-num {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 22px;
-    height: 22px;
-    background: #1a73e8;
-    color: #fff;
-    border-radius: 50%;
-    font-size: 11px;
-    font-weight: 700;
-  }
-  .card-actions {
-    display: flex;
-    gap: 6px;
-  }
-  .icon-btn {
-    background: #3c4043;
-    border: none;
-    color: #e6e6e6;
-    width: 30px;
-    height: 30px;
-    border-radius: 5px;
-    cursor: pointer;
-    font-size: 14px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: background 0.2s;
-    padding: 0;
-  }
-  .icon-btn:hover:not(:disabled) { background: #1a73e8; }
-  .icon-btn:disabled { opacity: 0.3; cursor: not-allowed; }
-
-  .canvas-wrap {
-    padding: 12px;
-    background: #0d1117;
-    flex-grow: 1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    min-height: 220px;
-    cursor: zoom-in;
-  }
-  .canvas-wrap canvas {
-    max-width: 100%;
-    max-height: 320px;
-    display: block;
-    border-radius: 4px;
-    background: #1a1f2e;
-  }
-  .canvas-wrap.empty::after {
-    content: 'Нет данных';
-    color: #555;
-    font-size: 13px;
-  }
-  .canvas-wrap.empty canvas { display: none; }
-
-  .card-stats {
-    padding: 8px 16px;
-    background: #0d1117;
-    border-top: 1px solid #2a3446;
-    font-size: 11px;
-    color: #9aa0a6;
-    font-family: 'Consolas', monospace;
-    display: flex;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    gap: 8px;
-    min-height: 30px;
-  }
-  .card-stats .stat { display: flex; gap: 4px; }
-  .card-stats .stat .k { color: #8ab4f8; }
-
-  /* ===== МОДАЛЬНОЕ ОКНО ===== */
-  .modal {
-    display: none;
-    position: fixed;
-    top: 0; left: 0;
-    width: 100%; height: 100%;
-    background: rgba(0,0,0,0.92);
-    z-index: 1000;
-    align-items: center;
-    justify-content: center;
-    padding: 30px;
-  }
-  .modal.active { display: flex; }
-  .modal-content {
-    position: relative;
-    max-width: 95%;
-    max-height: 95%;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-  }
-  .modal-content img, .modal-content canvas {
-    max-width: 100%;
-    max-height: 85vh;
-    border-radius: 6px;
-  }
-  .modal-close {
-    position: absolute;
-    top: -15px;
-    right: -15px;
-    background: #d93025;
-    color: #fff;
-    border: none;
-    width: 36px;
-    height: 36px;
-    border-radius: 50%;
-    cursor: pointer;
-    font-size: 18px;
-    font-weight: 700;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-  .modal-title {
-    color: #8ab4f8;
-    margin-bottom: 12px;
-    font-size: 15px;
-    font-weight: 600;
-  }
-
-  /* ===== ФУТЕР ===== */
-  .footer {
-    text-align: center;
-    color: #555;
-    font-size: 12px;
-    margin-top: 30px;
-    padding: 20px;
-    border-top: 1px solid #2a3446;
-  }
-
-  /* ===== АДАПТАЦИЯ ===== */
-  @media (max-width: 700px) {
-    .toolbar { flex-direction: column; align-items: stretch; }
-    .tool-group { width: 100%; }
-    input[type="file"], input[type="range"] { width: 100%; }
-    .progress-wrap { width: 100%; }
-    .images-grid { grid-template-columns: 1fr; }
-  }
+:root {
+  --bg: #0f1419; --panel: #1a1f2e; --panel-2: #0d1117;
+  --border: #2a3446; --text: #e6e6e6; --muted: #8b949e;
+  --accent: #1a73e8; --accent-2: #8ab4f8; --success: #1e8e3e;
+  --danger: #d93025; --warning: #fbbc04;
+}
+body.light {
+  --bg: #f1f5f9; --panel: #ffffff; --panel-2: #f8fafc;
+  --border: #d0d7de; --text: #1f2328; --muted: #57606a;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: 'Segoe UI', Tahoma, Arial, sans-serif;
+  background: var(--bg); color: var(--text);
+  min-height: 100vh; font-size: 14px;
+  transition: background 0.2s, color 0.2s;
+}
+.header {
+  background: linear-gradient(135deg, #1a3d6d 0%, #0d2440 100%);
+  padding: 14px 24px; display: flex; align-items: center;
+  justify-content: space-between; gap: 20px;
+  border-bottom: 2px solid var(--accent);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+}
+.header .brand h1 { font-size: 18px; color: #fff; font-weight: 600; }
+.header .brand .sub { color: #8ab4f8; font-size: 12px; margin-top: 2px; }
+.header-actions { display: flex; gap: 8px; }
+.icon-toggle {
+  background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);
+  color: #fff; padding: 8px 12px; border-radius: 6px; cursor: pointer;
+  font-size: 13px; transition: background 0.2s;
+}
+.icon-toggle:hover { background: rgba(255,255,255,0.2); }
+.tabs {
+  display: flex; background: var(--panel-2);
+  border-bottom: 1px solid var(--border); overflow-x: auto;
+}
+.tab-btn {
+  padding: 12px 22px; background: transparent; border: none;
+  color: var(--muted); font-size: 14px; font-weight: 600;
+  cursor: pointer; border-bottom: 3px solid transparent;
+  transition: all 0.2s; white-space: nowrap; font-family: inherit;
+}
+.tab-btn:hover { color: var(--text); background: rgba(255,255,255,0.03); }
+.tab-btn.active {
+  color: var(--accent-2); border-bottom-color: var(--accent);
+  background: var(--panel);
+}
+.tab-btn .badge {
+  display: inline-block; background: var(--accent); color: #fff;
+  font-size: 10px; padding: 1px 6px; border-radius: 8px;
+  margin-left: 6px; vertical-align: middle;
+}
+.container { max-width: 1700px; margin: 0 auto; padding: 20px; }
+.tab-content { display: none; }
+.tab-content.active { display: block; }
+.panel {
+  background: var(--panel); border: 1px solid var(--border);
+  border-radius: 10px; padding: 18px; margin-bottom: 16px;
+}
+.panel h2 { font-size: 15px; color: var(--accent-2); margin-bottom: 12px; font-weight: 600; }
+.toolbar { display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-end; }
+.tool-group { display: flex; flex-direction: column; gap: 5px; }
+.tool-group label {
+  font-size: 11px; color: var(--accent-2);
+  text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600;
+}
+input[type="file"], input[type="text"], select {
+  padding: 8px 12px; background: var(--panel-2);
+  border: 1px solid var(--border); border-radius: 6px;
+  color: var(--text); font-size: 13px; font-family: inherit;
+  min-width: 200px; cursor: pointer;
+}
+input[type="file"]::file-selector-button {
+  background: var(--accent); color: #fff; border: none;
+  padding: 6px 12px; border-radius: 4px; cursor: pointer;
+  margin-right: 10px; font-size: 12px; font-weight: 600;
+}
+input[type="range"] { width: 130px; accent-color: var(--accent); cursor: pointer; }
+.range-val {
+  display: inline-block; min-width: 36px; text-align: center;
+  background: var(--panel-2); border: 1px solid var(--border);
+  border-radius: 4px; padding: 3px 6px; font-size: 12px;
+  color: var(--accent-2); font-weight: 600; font-family: 'Consolas', monospace;
+}
+button {
+  padding: 9px 18px; font-size: 13px; font-weight: 600;
+  border: none; border-radius: 6px; cursor: pointer;
+  transition: all 0.2s; font-family: inherit;
+}
+button:disabled { opacity: 0.35; cursor: not-allowed; }
+.btn-primary { background: var(--accent); color: #fff; }
+.btn-primary:hover:not(:disabled) { background: #2b82f0; box-shadow: 0 0 12px rgba(26,115,232,0.5); }
+.btn-success { background: var(--success); color: #fff; }
+.btn-success:hover:not(:disabled) { background: #25a34a; }
+.btn-secondary { background: #3c4043; color: var(--text); }
+.btn-secondary:hover:not(:disabled) { background: #4a4e51; }
+.btn-danger { background: var(--danger); color: #fff; }
+.btn-danger:hover:not(:disabled) { background: #b71c1c; }
+.btn-sm { padding: 6px 12px; font-size: 12px; }
+.status-bar {
+  background: var(--panel); border-radius: 8px;
+  padding: 12px 18px; margin-bottom: 16px;
+  border-left: 4px solid var(--accent);
+  display: flex; justify-content: space-between;
+  align-items: center; flex-wrap: wrap; gap: 10px;
+}
+.status-bar.error { border-left-color: var(--danger); }
+.status-bar.working { border-left-color: var(--warning); }
+.status-bar.ready { border-left-color: var(--success); }
+#statusText { font-size: 13px; }
+.progress-wrap {
+  width: 240px; height: 6px; background: var(--panel-2);
+  border-radius: 3px; overflow: hidden; display: none;
+}
+.progress-wrap.active { display: block; }
+.progress-fill {
+  height: 100%; width: 0%;
+  background: linear-gradient(90deg, var(--accent), var(--accent-2));
+  transition: width 0.3s;
+}
+.info-bar {
+  display: flex; flex-wrap: wrap; gap: 16px;
+  background: var(--panel); border: 1px solid var(--border);
+  border-radius: 8px; padding: 12px 18px; margin-bottom: 16px;
+  font-size: 13px;
+}
+.info-item { display: flex; gap: 6px; align-items: center; }
+.info-item .label { color: var(--accent-2); font-weight: 600; }
+.info-item .value { color: var(--text); font-family: 'Consolas', monospace; }
+.images-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 14px;
+}
+.image-card {
+  background: var(--panel); border: 1px solid var(--border);
+  border-radius: 10px; overflow: hidden;
+  transition: border-color 0.2s, transform 0.2s;
+  display: flex; flex-direction: column;
+}
+.image-card:hover { border-color: var(--accent); transform: translateY(-2px); }
+.image-card.active { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+.card-header {
+  padding: 10px 14px; background: var(--panel-2);
+  border-bottom: 1px solid var(--border);
+  display: flex; justify-content: space-between; align-items: center;
+}
+.card-header h3 {
+  font-size: 12px; font-weight: 600; color: var(--accent-2);
+  display: flex; align-items: center; gap: 8px; margin: 0;
+}
+.step-num {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 22px; height: 22px; background: var(--accent); color: #fff;
+  border-radius: 50%; font-size: 11px; font-weight: 700;
+}
+.card-actions { display: flex; gap: 4px; }
+.icon-btn {
+  background: #3c4043; border: none; color: var(--text);
+  width: 28px; height: 28px; border-radius: 5px;
+  cursor: pointer; font-size: 13px; display: flex;
+  align-items: center; justify-content: center;
+  transition: background 0.2s; padding: 0;
+}
+.icon-btn:hover:not(:disabled) { background: var(--accent); }
+.icon-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+.canvas-wrap {
+  padding: 10px; background: var(--panel-2); flex-grow: 1;
+  display: flex; align-items: center; justify-content: center;
+  min-height: 200px; cursor: zoom-in; position: relative;
+}
+.canvas-wrap canvas {
+  max-width: 100%; max-height: 300px; display: block;
+  border-radius: 4px; background: var(--panel);
+}
+.canvas-wrap.empty::after {
+  content: 'Нет данных'; color: var(--muted); font-size: 13px;
+}
+.canvas-wrap.empty canvas { display: none; }
+.card-stats {
+  padding: 8px 14px; background: var(--panel-2);
+  border-top: 1px solid var(--border);
+  font-size: 11px; color: var(--muted);
+  font-family: 'Consolas', monospace;
+  display: flex; flex-wrap: wrap; gap: 10px; min-height: 30px;
+}
+.card-stats .k { color: var(--accent-2); }
+.modal {
+  display: none; position: fixed; top: 0; left: 0;
+  width: 100%; height: 100%; background: rgba(0,0,0,0.94);
+  z-index: 1000; align-items: center; justify-content: center; padding: 30px;
+}
+.modal.active { display: flex; }
+.modal-content {
+  position: relative; max-width: 95%; max-height: 95%;
+  display: flex; flex-direction: column; align-items: center;
+}
+.modal-content canvas { max-width: 100%; max-height: 85vh; border-radius: 6px; }
+.modal-close {
+  position: absolute; top: -15px; right: -15px;
+  background: var(--danger); color: #fff; border: none;
+  width: 36px; height: 36px; border-radius: 50%;
+  cursor: pointer; font-size: 18px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+}
+.modal-title { color: var(--accent-2); margin-bottom: 12px; font-size: 15px; font-weight: 600; }
+.slider-wrap {
+  position: relative; width: 100%; max-width: 1000px;
+  margin: 0 auto; user-select: none; background: var(--panel-2);
+  border-radius: 8px; overflow: hidden;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+}
+.slider-wrap canvas { display: block; width: 100%; height: auto; }
+.slider-handle {
+  position: absolute; top: 0; bottom: 0; width: 4px;
+  background: var(--accent-2); cursor: ew-resize;
+  box-shadow: 0 0 12px rgba(138,180,248,0.8);
+}
+.slider-handle::after {
+  content: '⇄'; position: absolute; top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  width: 36px; height: 36px; background: var(--accent);
+  border-radius: 50%; color: #fff; display: flex;
+  align-items: center; justify-content: center;
+  font-size: 18px; border: 3px solid var(--accent-2);
+}
+.slider-labels {
+  display: flex; justify-content: space-between;
+  margin-top: 10px; color: var(--muted); font-size: 12px;
+  font-weight: 600; text-transform: uppercase;
+}
+.overlay-controls { display: flex; gap: 16px; flex-wrap: wrap; align-items: center; margin-bottom: 16px; }
+.histogram-wrap {
+  background: var(--panel-2); border-radius: 8px;
+  padding: 14px; max-width: 700px;
+}
+#histogramCanvas { width: 100%; height: 220px; display: block; }
+.journal-table {
+  width: 100%; border-collapse: collapse;
+  font-family: 'Consolas', monospace; font-size: 12px;
+  background: var(--panel-2); border-radius: 8px; overflow: hidden;
+}
+.journal-table th {
+  background: var(--panel); padding: 10px 12px;
+  text-align: left; color: var(--accent-2);
+  font-weight: 600; border-bottom: 1px solid var(--border);
+  text-transform: uppercase; font-size: 11px; letter-spacing: 0.5px;
+}
+.journal-table td {
+  padding: 9px 12px; border-bottom: 1px solid var(--border);
+  color: var(--text);
+}
+.journal-table tr:hover td { background: rgba(26,115,232,0.08); }
+.journal-empty { padding: 30px; text-align: center; color: var(--muted); }
+.hash-box {
+  background: var(--panel-2); border: 1px solid var(--border);
+  border-radius: 6px; padding: 12px 14px;
+  font-family: 'Consolas', monospace; font-size: 11px;
+  color: var(--accent-2); word-break: break-all;
+  display: flex; justify-content: space-between; align-items: center; gap: 12px;
+}
+.hash-box .label { color: var(--muted); font-family: inherit; font-size: 12px; }
+.protocol-preview {
+  background: #fff; color: #000;
+  padding: 30px; border-radius: 8px;
+  max-height: 600px; overflow-y: auto;
+  font-family: 'Times New Roman', serif; line-height: 1.6;
+}
+.protocol-preview h1 { font-size: 18px; margin-bottom: 16px; text-align: center; }
+.protocol-preview h2 { font-size: 15px; margin: 16px 0 8px 0; }
+.protocol-preview table { width: 100%; border-collapse: collapse; margin: 10px 0; font-size: 13px; }
+.protocol-preview th, .protocol-preview td {
+  border: 1px solid #999; padding: 6px 10px; text-align: left;
+}
+.footer {
+  text-align: center; color: var(--muted); font-size: 12px;
+  margin-top: 30px; padding: 20px;
+  border-top: 1px solid var(--border);
+}
+@media (max-width: 700px) {
+  .toolbar { flex-direction: column; align-items: stretch; }
+  .tool-group { width: 100%; }
+  input[type="file"], input[type="range"], select { width: 100%; }
+  .progress-wrap { width: 100%; }
+  .images-grid { grid-template-columns: 1fr; }
+  .tab-btn { padding: 10px 14px; font-size: 12px; }
+}
 </style>
 </head>
 <body>
 
 <div class="header">
-  <h1>Обработка изображений следов</h1>
-  <div class="sub">Трасологическая экспертиза — цифровая обработка изображений</div>
+  <div class="brand">
+    <h1>Экспертная обработка изображений следов</h1>
+    <div class="sub">Трасологическая экспертиза — цифровая обработка и документирование</div>
+  </div>
+  <div class="header-actions">
+    <button class="icon-toggle" id="themeToggle" title="Сменить тему">🌙 Тема</button>
+  </div>
+</div>
+
+<div class="tabs">
+  <button class="tab-btn active" data-tab="processing">Обработка</button>
+  <button class="tab-btn" data-tab="comparison">Сравнение</button>
+  <button class="tab-btn" data-tab="measure">Измерения</button>
+  <button class="tab-btn" data-tab="journal">Журнал <span class="badge" id="journalBadge">0</span></button>
+  <button class="tab-btn" data-tab="report">Отчёт</button>
 </div>
 
 <div class="container">
 
-  <!-- ПАНЕЛЬ УПРАВЛЕНИЯ -->
-  <div class="toolbar">
-    <div class="tool-group">
-      <label>Изображение следа</label>
-      <input type="file" id="fileInput" accept="image/*">
-    </div>
-
-    <div class="tool-group">
-      <label>Сила фильтрации</label>
-      <div style="display:flex;align-items:center;gap:8px;">
-        <input type="range" id="blurRange" min="1" max="9" value="3" step="2">
-        <span class="range-val" id="blurValue">3</span>
+  <div class="tab-content active" id="tab-processing">
+    <div class="panel">
+      <div class="toolbar">
+        <div class="tool-group">
+          <label>Изображение следа</label>
+          <input type="file" id="fileInput" accept="image/*">
+        </div>
+        <div class="tool-group">
+          <label>Фильтр</label>
+          <select id="filterType">
+            <option value="median">Медианный</option>
+            <option value="gaussian">Гауссов</option>
+            <option value="none">Без фильтра</option>
+          </select>
+        </div>
+        <div class="tool-group">
+          <label>Сила фильтра</label>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <input type="range" id="blurRange" min="1" max="15" value="5" step="2">
+            <span class="range-val" id="blurValue">5</span>
+          </div>
+        </div>
+        <div class="tool-group">
+          <label>Морфология</label>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <input type="range" id="morphRange" min="0" max="3" value="1" step="1">
+            <span class="range-val" id="morphValue">1</span>
+          </div>
+        </div>
+        <div class="tool-group">
+          <label>Порог контуров</label>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <input type="range" id="edgeRange" min="20" max="200" value="100" step="10">
+            <span class="range-val" id="edgeValue">100</span>
+          </div>
+        </div>
+        <div class="tool-group" style="flex-direction:row;gap:8px;margin-left:auto;flex-wrap:wrap;">
+          <button class="btn-primary" id="processBtn" disabled>Обработать</button>
+          <button class="btn-success" id="downloadAllBtn" disabled>Скачать все</button>
+          <button class="btn-secondary" id="resetBtn" disabled>Сбросить</button>
+        </div>
       </div>
     </div>
 
-    <div class="tool-group">
-      <label>Морфология</label>
-      <div style="display:flex;align-items:center;gap:8px;">
-        <input type="range" id="morphRange" min="0" max="3" value="1" step="1">
-        <span class="range-val" id="morphValue">1</span>
+    <div class="status-bar ready" id="statusBar">
+      <div id="statusText">Готово. Выберите изображение следа.</div>
+      <div class="progress-wrap" id="progressWrap">
+        <div class="progress-fill" id="progressFill"></div>
       </div>
     </div>
 
-    <div class="tool-group">
-      <label>Порог контуров</label>
-      <div style="display:flex;align-items:center;gap:8px;">
-        <input type="range" id="edgeRange" min="20" max="200" value="100" step="10">
-        <span class="range-val" id="edgeValue">100</span>
-      </div>
+    <div class="info-bar" id="infoBar" style="display:none;">
+      <div class="info-item"><span class="label">Размер:</span><span class="value" id="infoSize">—</span></div>
+      <div class="info-item"><span class="label">Порог Оцу:</span><span class="value" id="infoThreshold">—</span></div>
+      <div class="info-item"><span class="label">Контуров:</span><span class="value" id="infoContours">—</span></div>
+      <div class="info-item"><span class="label">Время:</span><span class="value" id="infoTime">—</span></div>
     </div>
 
-    <div class="tool-group">
-      <label>Макс. размер</label>
-      <div style="display:flex;align-items:center;gap:8px;">
-        <input type="range" id="sizeRange" min="400" max="2000" value="1200" step="100">
-        <span class="range-val" id="sizeValue">1200</span>
-      </div>
-    </div>
-
-    <div class="tool-group" style="flex-direction:row;gap:10px;margin-left:auto;">
-      <button class="btn-primary" id="processBtn" disabled>Обработать</button>
-      <button class="btn-success" id="downloadAllBtn" disabled>Скачать все</button>
-      <button class="btn-secondary" id="resetBtn" disabled>Сбросить</button>
+    <div class="images-grid" id="imagesGrid">
+      <div class="image-card" data-key="original"><div class="card-header"><h3><span class="step-num">1</span>Исходное</h3><div class="card-actions"><button class="icon-btn" data-action="zoom" data-key="original" disabled>⤢</button><button class="icon-btn" data-action="download" data-key="original" disabled>⬇</button></div></div><div class="canvas-wrap empty"><canvas id="cvOriginal"></canvas></div><div class="card-stats" id="statsOriginal">—</div></div>
+      <div class="image-card" data-key="gray"><div class="card-header"><h3><span class="step-num">2</span>Оттенки серого</h3><div class="card-actions"><button class="icon-btn" data-action="zoom" data-key="gray" disabled>⤢</button><button class="icon-btn" data-action="download" data-key="gray" disabled>⬇</button></div></div><div class="canvas-wrap empty"><canvas id="cvGray"></canvas></div><div class="card-stats" id="statsGray">—</div></div>
+      <div class="image-card" data-key="median"><div class="card-header"><h3><span class="step-num">3</span>Фильтрация</h3><div class="card-actions"><button class="icon-btn" data-action="zoom" data-key="median" disabled>⤢</button><button class="icon-btn" data-action="download" data-key="median" disabled>⬇</button></div></div><div class="canvas-wrap empty"><canvas id="cvMedian"></canvas></div><div class="card-stats" id="statsMedian">—</div></div>
+      <div class="image-card" data-key="enhanced"><div class="card-header"><h3><span class="step-num">4</span>Контраст</h3><div class="card-actions"><button class="icon-btn" data-action="zoom" data-key="enhanced" disabled>⤢</button><button class="icon-btn" data-action="download" data-key="enhanced" disabled>⬇</button></div></div><div class="canvas-wrap empty"><canvas id="cvEnhanced"></canvas></div><div class="card-stats" id="statsEnhanced">—</div></div>
+      <div class="image-card" data-key="binary"><div class="card-header"><h3><span class="step-num">5</span>Бинаризация</h3><div class="card-actions"><button class="icon-btn" data-action="zoom" data-key="binary" disabled>⤢</button><button class="icon-btn" data-action="download" data-key="binary" disabled>⬇</button></div></div><div class="canvas-wrap empty"><canvas id="cvBinary"></canvas></div><div class="card-stats" id="statsBinary">—</div></div>
+      <div class="image-card" data-key="contours"><div class="card-header"><h3><span class="step-num">6</span>Контуры</h3><div class="card-actions"><button class="icon-btn" data-action="zoom" data-key="contours" disabled>⤢</button><button class="icon-btn" data-action="download" data-key="contours" disabled>⬇</button></div></div><div class="canvas-wrap empty"><canvas id="cvContours"></canvas></div><div class="card-stats" id="statsContours">—</div></div>
     </div>
   </div>
 
-  <!-- СТАТУС -->
-  <div class="status-bar ready" id="statusBar">
-    <div id="statusText">Готово. Выберите изображение следа.</div>
-    <div class="progress-wrap" id="progressWrap">
-      <div class="progress-fill" id="progressFill"></div>
+  <div class="tab-content" id="tab-comparison">
+    <div class="panel">
+      <h2>Сравнение «до / после»</h2>
+      <p style="color:var(--muted);font-size:13px;margin-bottom:14px;">Потяните за ползунок, чтобы сравнить исходное изображение с обработанным.</p>
+      <div class="slider-wrap" id="sliderWrap">
+        <canvas id="cvSlider"></canvas>
+        <div class="slider-handle" id="sliderHandle" style="left:50%;"></div>
+      </div>
+      <div class="slider-labels"><span>Исходное</span><span>Обработанное</span></div>
+    </div>
+
+    <div class="panel">
+      <h2>Наложение следа и образца</h2>
+      <p style="color:var(--muted);font-size:13px;margin-bottom:14px;">Загрузите второе изображение (образец) для наложения на след.</p>
+      <div class="overlay-controls">
+        <input type="file" id="sampleInput" accept="image/*">
+        <label style="color:var(--accent-2);font-size:12px;">Прозрачность:</label>
+        <input type="range" id="overlayOpacity" min="0" max="100" value="50">
+        <span class="range-val" id="overlayVal">50%</span>
+        <button class="btn-secondary btn-sm" id="clearOverlayBtn">Очистить</button>
+      </div>
+      <div class="slider-wrap"><canvas id="cvOverlay"></canvas></div>
     </div>
   </div>
 
-  <!-- ИНФОРМАЦИЯ -->
-  <div class="info-bar" id="infoBar" style="display:none;">
-    <div class="info-item"><span class="label">Размер:</span><span class="value" id="infoSize">—</span></div>
-    <div class="info-item"><span class="label">Порог Оцу:</span><span class="value" id="infoThreshold">—</span></div>
-    <div class="info-item"><span class="label">Контуров:</span><span class="value" id="infoContours">—</span></div>
-    <div class="info-item"><span class="label">Время:</span><span class="value" id="infoTime">—</span></div>
+  <div class="tab-content" id="tab-measure">
+    <div class="panel">
+      <h2>Линейка — измерение расстояний</h2>
+      <p style="color:var(--muted);font-size:13px;margin-bottom:14px;">Кликните два раза на изображении — между точками появится линия и расстояние в пикселях.</p>
+      <div class="slider-wrap"><canvas id="cvRuler"></canvas></div>
+      <div style="margin-top:12px;display:flex;gap:12px;align-items:center;flex-wrap:wrap;">
+        <span style="color:var(--accent-2);font-weight:600;">Расстояние:</span>
+        <span style="font-family:'Consolas',monospace;font-size:15px;" id="rulerDistance">— px</span>
+        <button class="btn-secondary btn-sm" id="clearRulerBtn">Сбросить измерение</button>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2>Гистограмма яркости</h2>
+      <p style="color:var(--muted);font-size:13px;margin-bottom:14px;">Распределение яркостей на изображении — помогает оценить освещённость и контраст.</p>
+      <div class="histogram-wrap"><canvas id="histogramCanvas"></canvas></div>
+    </div>
   </div>
 
-  <!-- СЕТКА ИЗОБРАЖЕНИЙ -->
-  <div class="images-grid" id="imagesGrid">
-    <div class="image-card" data-key="original">
-      <div class="card-header">
-        <h3><span class="step-num">1</span> Исходное изображение</h3>
-        <div class="card-actions">
-          <button class="icon-btn" data-action="zoom" data-key="original" title="Открыть" disabled>⤢</button>
-          <button class="icon-btn" data-action="download" data-key="original" title="Скачать" disabled>⬇</button>
+  <div class="tab-content" id="tab-journal">
+    <div class="panel">
+      <h2>Хэш исходного изображения (SHA-256)</h2>
+      <p style="color:var(--muted);font-size:13px;margin-bottom:12px;">Хэш подтверждает, что исходный файл не изменялся. Его можно приложить к заключению.</p>
+      <div class="hash-box">
+        <div>
+          <div class="label">SHA-256:</div>
+          <div id="hashValue">—</div>
         </div>
+        <button class="btn-secondary btn-sm" id="copyHashBtn" disabled>Копировать</button>
       </div>
-      <div class="canvas-wrap empty"><canvas id="cvOriginal"></canvas></div>
-      <div class="card-stats" id="statsOriginal">—</div>
     </div>
 
-    <div class="image-card" data-key="gray">
-      <div class="card-header">
-        <h3><span class="step-num">2</span> Оттенки серого</h3>
-        <div class="card-actions">
-          <button class="icon-btn" data-action="zoom" data-key="gray" title="Открыть" disabled>⤢</button>
-          <button class="icon-btn" data-action="download" data-key="gray" title="Скачать" disabled>⬇</button>
-        </div>
+    <div class="panel">
+      <h2>Журнал операций</h2>
+      <p style="color:var(--muted);font-size:13px;margin-bottom:12px;">Все выполненные действия фиксируются с указанием времени, метода и параметров.</p>
+      <div id="journalContainer"><div class="journal-empty">Журнал пуст. Начните обработку изображения.</div></div>
+      <div style="margin-top:12px;display:flex;gap:8px;">
+        <button class="btn-secondary btn-sm" id="downloadJournalBtn" disabled>Скачать журнал (CSV)</button>
+        <button class="btn-danger btn-sm" id="clearJournalBtn" disabled>Очистить журнал</button>
       </div>
-      <div class="canvas-wrap empty"><canvas id="cvGray"></canvas></div>
-      <div class="card-stats" id="statsGray">—</div>
     </div>
+  </div>
 
-    <div class="image-card" data-key="median">
-      <div class="card-header">
-        <h3><span class="step-num">3</span> Фильтрация</h3>
-        <div class="card-actions">
-          <button class="icon-btn" data-action="zoom" data-key="median" title="Открыть" disabled>⤢</button>
-          <button class="icon-btn" data-action="download" data-key="median" title="Скачать" disabled>⬇</button>
-        </div>
+  <div class="tab-content" id="tab-report">
+    <div class="panel">
+      <h2>Протокол обработки</h2>
+      <p style="color:var(--muted);font-size:13px;margin-bottom:12px;">Протокол формируется автоматически на основе журнала операций и хэша изображения.</p>
+      <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;">
+        <button class="btn-primary" id="generateProtocolBtn" disabled>Сформировать протокол</button>
+        <button class="btn-success" id="downloadProtocolBtn" disabled>Скачать HTML</button>
+        <button class="btn-secondary" id="printProtocolBtn" disabled>Печать</button>
       </div>
-      <div class="canvas-wrap empty"><canvas id="cvMedian"></canvas></div>
-      <div class="card-stats" id="statsMedian">—</div>
-    </div>
-
-    <div class="image-card" data-key="enhanced">
-      <div class="card-header">
-        <h3><span class="step-num">4</span> Контраст</h3>
-        <div class="card-actions">
-          <button class="icon-btn" data-action="zoom" data-key="enhanced" title="Открыть" disabled>⤢</button>
-          <button class="icon-btn" data-action="download" data-key="enhanced" title="Скачать" disabled>⬇</button>
-        </div>
+      <div class="protocol-preview" id="protocolPreview">
+        <p style="color:#666;text-align:center;">Протокол ещё не сформирован.</p>
       </div>
-      <div class="canvas-wrap empty"><canvas id="cvEnhanced"></canvas></div>
-      <div class="card-stats" id="statsEnhanced">—</div>
-    </div>
-
-    <div class="image-card" data-key="binary">
-      <div class="card-header">
-        <h3><span class="step-num">5</span> Бинаризация</h3>
-        <div class="card-actions">
-          <button class="icon-btn" data-action="zoom" data-key="binary" title="Открыть" disabled>⤢</button>
-          <button class="icon-btn" data-action="download" data-key="binary" title="Скачать" disabled>⬇</button>
-        </div>
-      </div>
-      <div class="canvas-wrap empty"><canvas id="cvBinary"></canvas></div>
-      <div class="card-stats" id="statsBinary">—</div>
-    </div>
-
-    <div class="image-card" data-key="contours">
-      <div class="card-header">
-        <h3><span class="step-num">6</span> Контуры следа</h3>
-        <div class="card-actions">
-          <button class="icon-btn" data-action="zoom" data-key="contours" title="Открыть" disabled>⤢</button>
-          <button class="icon-btn" data-action="download" data-key="contours" title="Скачать" disabled>⬇</button>
-        </div>
-      </div>
-      <div class="canvas-wrap empty"><canvas id="cvContours"></canvas></div>
-      <div class="card-stats" id="statsContours">—</div>
     </div>
   </div>
 
   <div class="footer">Курсовая работа — методы цифровой обработки изображений в трасологической экспертизе</div>
 </div>
 
-<!-- МОДАЛЬНОЕ ОКНО -->
 <div class="modal" id="modal">
   <div class="modal-content">
     <button class="modal-close" id="modalClose">×</button>
@@ -500,222 +480,287 @@
 </div>
 
 <script>
-// ============================================================
-// ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ
-// ============================================================
-let sourceImageData = null;
-let resultCanvases = {}; // key -> canvas
-let isProcessing = false;
+const state = {
+  sourceImageData: null,
+  sourceFileHash: '',
+  sourceFileName: '',
+  resultCanvases: {},
+  journal: [],
+  isProcessing: false,
+  overlayImage: null,
+  overlayOpacity: 50,
+  rulerPoints: [],
+  currentSourceCanvas: null
+};
 
 const CANVAS_IDS = {
-  original: 'cvOriginal',
-  gray: 'cvGray',
-  median: 'cvMedian',
-  enhanced: 'cvEnhanced',
-  binary: 'cvBinary',
-  contours: 'cvContours'
+  original: 'cvOriginal', gray: 'cvGray', median: 'cvMedian',
+  enhanced: 'cvEnhanced', binary: 'cvBinary', contours: 'cvContours'
 };
-
 const STATS_IDS = {
-  original: 'statsOriginal',
-  gray: 'statsGray',
-  median: 'statsMedian',
-  enhanced: 'statsEnhanced',
-  binary: 'statsBinary',
-  contours: 'statsContours'
+  original: 'statsOriginal', gray: 'statsGray', median: 'statsMedian',
+  enhanced: 'statsEnhanced', binary: 'statsBinary', contours: 'statsContours'
+};
+const CARD_TITLES = {
+  original: 'Исходное изображение', gray: 'Оттенки серого',
+  median: 'Фильтрация', enhanced: 'Выравнивание контраста',
+  binary: 'Бинаризация и морфология', contours: 'Контуры следа'
 };
 
-// ============================================================
-// СТАТУС И ПРОГРЕСС
-// ============================================================
 function setStatus(text, mode) {
   const bar = document.getElementById('statusBar');
-  const txt = document.getElementById('statusText');
-  txt.textContent = text;
+  document.getElementById('statusText').textContent = text;
   bar.className = 'status-bar';
   if (mode === 'error') bar.classList.add('error');
   else if (mode === 'working') bar.classList.add('working');
   else bar.classList.add('ready');
 }
-
-function setProgress(percent) {
+function setProgress(p) {
   const wrap = document.getElementById('progressWrap');
   const fill = document.getElementById('progressFill');
-  if (percent === null) {
-    wrap.classList.remove('active');
-  } else {
-    wrap.classList.add('active');
-    fill.style.width = percent + '%';
-  }
+  if (p === null) { wrap.classList.remove('active'); }
+  else { wrap.classList.add('active'); fill.style.width = p + '%'; }
 }
 
-// ============================================================
-// ВЫБОР ФАЙЛА
-// ============================================================
-document.getElementById('fileInput').addEventListener('change', function(e) {
+document.getElementById('themeToggle').addEventListener('click', function() {
+  document.body.classList.toggle('light');
+  const isLight = document.body.classList.contains('light');
+  this.textContent = isLight ? '☀ Тема' : '🌙 Тема';
+  localStorage.setItem('theme', isLight ? 'light' : 'dark');
+});
+if (localStorage.getItem('theme') === 'light') {
+  document.body.classList.add('light');
+  document.getElementById('themeToggle').textContent = '☀ Тема';
+}
+
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', function() {
+    const tab = this.dataset.tab;
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+    this.classList.add('active');
+    document.getElementById('tab-' + tab).classList.add('active');
+    if (tab === 'comparison') { updateSlider(); updateOverlay(); }
+    if (tab === 'measure') { drawRuler(); drawHistogram(); }
+  });
+});
+
+function addJournalEntry(action, params, result) {
+  state.journal.push({
+    time: new Date().toLocaleTimeString('ru-RU'),
+    action: action, params: params || '—', result: result || '—'
+  });
+  renderJournal();
+  document.getElementById('journalBadge').textContent = state.journal.length;
+  document.getElementById('downloadJournalBtn').disabled = false;
+  document.getElementById('clearJournalBtn').disabled = false;
+  document.getElementById('generateProtocolBtn').disabled = state.journal.length === 0;
+}
+
+function renderJournal() {
+  const container = document.getElementById('journalContainer');
+  if (state.journal.length === 0) {
+    container.innerHTML = '<div class="journal-empty">Журнал пуст. Начните обработку изображения.</div>';
+    return;
+  }
+  let html = '<table class="journal-table"><thead><tr><th>Время</th><th>Действие</th><th>Параметры</th><th>Результат</th></tr></thead><tbody>';
+  state.journal.forEach(e => {
+    html += '<tr><td>' + e.time + '</td><td>' + e.action + '</td><td>' + e.params + '</td><td>' + e.result + '</td></tr>';
+  });
+  html += '</tbody></table>';
+  container.innerHTML = html;
+}
+
+document.getElementById('clearJournalBtn').addEventListener('click', function() {
+  if (!confirm('Очистить журнал операций?')) return;
+  state.journal = [];
+  renderJournal();
+  document.getElementById('journalBadge').textContent = '0';
+  document.getElementById('downloadJournalBtn').disabled = true;
+  document.getElementById('clearJournalBtn').disabled = true;
+  document.getElementById('generateProtocolBtn').disabled = true;
+});
+
+document.getElementById('downloadJournalBtn').addEventListener('click', function() {
+  let csv = 'Время;Действие;Параметры;Результат\n';
+  state.journal.forEach(e => {
+    csv += [e.time, e.action, e.params, e.result].map(v => '"' + v + '"').join(';') + '\n';
+  });
+  const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(blob);
+  link.download = 'journal.csv';
+  link.click();
+});
+
+async function sha256(buffer) {
+  const hashBuf = await crypto.subtle.digest('SHA-256', buffer);
+  return Array.from(new Uint8Array(hashBuf)).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+document.getElementById('copyHashBtn').addEventListener('click', function() {
+  const hash = document.getElementById('hashValue').textContent;
+  if (!hash || hash === '—') return;
+  navigator.clipboard.writeText(hash).then(() => {
+    this.textContent = 'Скопировано!';
+    setTimeout(() => { this.textContent = 'Копировать'; }, 1500);
+  });
+});
+
+document.getElementById('fileInput').addEventListener('change', async function(e) {
   const file = e.target.files[0];
   if (!file) return;
-
-  setStatus('Чтение файла...', 'working');
+  setStatus('Чтение файла и вычисление хэша...', 'working');
   setProgress(10);
 
-  const reader = new FileReader();
-  reader.onload = function(event) {
+  try {
+    const arrayBuffer = await file.arrayBuffer();
+    state.sourceFileHash = await sha256(arrayBuffer);
+    document.getElementById('hashValue').textContent = state.sourceFileHash;
+    document.getElementById('copyHashBtn').disabled = false;
+    state.sourceFileName = file.name;
+
+    const blobUrl = URL.createObjectURL(file);
     const img = new Image();
     img.onload = function() {
-      const MAX_SIZE = parseInt(document.getElementById('sizeRange').value, 10);
+      const MAX_SIZE = 1400;
       let w = img.width, h = img.height;
       if (w > MAX_SIZE || h > MAX_SIZE) {
         if (w > h) { h = Math.round(h * MAX_SIZE / w); w = MAX_SIZE; }
         else { w = Math.round(w * MAX_SIZE / h); h = MAX_SIZE; }
       }
-
       const tmp = document.createElement('canvas');
       tmp.width = w; tmp.height = h;
       const ctx = tmp.getContext('2d', { willReadFrequently: true });
       ctx.drawImage(img, 0, 0, w, h);
-      sourceImageData = ctx.getImageData(0, 0, w, h);
+      state.sourceImageData = ctx.getImageData(0, 0, w, h);
+      URL.revokeObjectURL(blobUrl);
 
-      // Сбрасываем старые результаты
       resetResults();
-
-      // Рисуем исходное
       const origCanvas = document.getElementById('cvOriginal');
       origCanvas.width = w; origCanvas.height = h;
-      origCanvas.getContext('2d').putImageData(sourceImageData, 0, 0);
-      resultCanvases.original = origCanvas;
+      origCanvas.getContext('2d').putImageData(state.sourceImageData, 0, 0);
+      state.resultCanvases.original = origCanvas;
+      state.currentSourceCanvas = origCanvas;
 
-      // Активируем карточку исходного
       activateCard('original');
-      updateStats('original', {
-        'Размер': w + '×' + h,
-        'Пикселей': (w * h).toLocaleString('ru-RU')
-      });
+      enableCardButtons('original');
+      document.getElementById('cvOriginal').parentElement.classList.remove('empty');
+      updateStats('original', { 'Размер': w + '×' + h, 'Пикселей': (w * h).toLocaleString('ru-RU') });
+
+      addJournalEntry('Загрузка изображения', 'Файл: ' + file.name, 'Размер: ' + w + '×' + h);
 
       setProgress(100);
       setStatus('Изображение загружено: ' + w + '×' + h + '. Нажмите «Обработать».', 'ready');
-
       document.getElementById('processBtn').disabled = false;
       document.getElementById('resetBtn').disabled = false;
-      document.getElementById('downloadAllBtn').disabled = true;
 
-      // Включаем кнопки для исходного
-      enableCardButtons('original');
-
+      updateSlider();
+      drawRuler();
+      drawHistogram();
       setTimeout(() => setProgress(null), 800);
     };
-    img.onerror = () => { setStatus('Ошибка: не удалось прочитать изображение.', 'error'); setProgress(null); };
-    img.src = event.target.result;
-  };
-  reader.onerror = () => { setStatus('Ошибка чтения файла.', 'error'); setProgress(null); };
-  reader.readAsDataURL(file);
+    img.onerror = () => { setStatus('Не удалось прочитать изображение.', 'error'); setProgress(null); };
+    img.src = blobUrl;
+  } catch (err) {
+    console.error(err);
+    setStatus('Ошибка: ' + err.message, 'error');
+    setProgress(null);
+  }
 });
 
-// ============================================================
-// ПОЛЗУНКИ
-// ============================================================
-['blur', 'morph', 'edge', 'size'].forEach(function(name) {
-  const range = document.getElementById(name + 'Range');
-  const val = document.getElementById(name + 'Value');
-  range.addEventListener('input', function() {
-    val.textContent = this.value;
-    // Если меняем размер — нужно перезагрузить изображение
-    if (name === 'size' && sourceImageData) {
-      setStatus('Изменён максимальный размер. Перезагрузите изображение.', 'working');
-    }
-  });
+['blur', 'morph', 'edge'].forEach(name => {
+  const r = document.getElementById(name + 'Range');
+  const v = document.getElementById(name + 'Value');
+  r.addEventListener('input', () => { v.textContent = r.value; });
+});
+document.getElementById('overlayOpacity').addEventListener('input', function() {
+  document.getElementById('overlayVal').textContent = this.value + '%';
+  state.overlayOpacity = parseInt(this.value, 10);
+  updateOverlay();
 });
 
-// ============================================================
-// ОБРАБОТКА
-// ============================================================
 document.getElementById('processBtn').addEventListener('click', function() {
-  if (!sourceImageData || isProcessing) return;
-  isProcessing = true;
-  document.getElementById('processBtn').disabled = true;
+  if (!state.sourceImageData || state.isProcessing) return;
+  state.isProcessing = true;
+  this.disabled = true;
   document.getElementById('downloadAllBtn').disabled = true;
-
   setTimeout(() => {
-    try {
-      processImage();
-    } catch (err) {
+    try { processImage(); }
+    catch (err) {
       console.error(err);
-      setStatus('Ошибка обработки: ' + err.message, 'error');
+      setStatus('Ошибка: ' + err.message, 'error');
       setProgress(null);
     } finally {
-      isProcessing = false;
-      document.getElementById('processBtn').disabled = false;
+      state.isProcessing = false;
+      this.disabled = false;
     }
-  }, 80);
+  }, 60);
 });
 
 function processImage() {
+  const filterType = document.getElementById('filterType').value;
   const blurSize = parseInt(document.getElementById('blurRange').value, 10);
   const morphIter = parseInt(document.getElementById('morphRange').value, 10);
   const edgeThreshold = parseInt(document.getElementById('edgeRange').value, 10);
-  const w = sourceImageData.width;
-  const h = sourceImageData.height;
+  const w = state.sourceImageData.width;
+  const h = state.sourceImageData.height;
   const t0 = performance.now();
+  const srcData = state.sourceImageData.data;
 
-  const srcData = sourceImageData.data;
-
-  // ---------- Шаг 2. Оттенки серого ----------
   setStatus('Шаг 2/6: перевод в оттенки серого...', 'working');
   setProgress(15);
-  const grayData = new Uint8ClampedArray(w * h * 4);
   const grayValues = new Uint8ClampedArray(w * h);
+  const grayData = new Uint8ClampedArray(w * h * 4);
   for (let i = 0; i < w * h; i++) {
-    const r = srcData[i * 4], g = srcData[i * 4 + 1], b = srcData[i * 4 + 2];
-    const v = Math.round(0.299 * r + 0.587 * g + 0.114 * b);
+    const v = Math.round(0.299 * srcData[i * 4] + 0.587 * srcData[i * 4 + 1] + 0.114 * srcData[i * 4 + 2]);
     grayValues[i] = v;
-    grayData[i * 4] = grayData[i * 4 + 1] = grayData[i * 4 + 2] = v;
-    grayData[i * 4 + 3] = 255;
+    grayData[i*4] = grayData[i*4+1] = grayData[i*4+2] = v;
+    grayData[i*4+3] = 255;
   }
   drawToCanvas(grayData, w, h, 'gray');
-  updateStats('gray', { 'Размер': w + '×' + h, 'Каналов': '1 (яркость)' });
+  updateStats('gray', { 'Размер': w + '×' + h, 'Каналов': '1' });
 
-  // ---------- Шаг 3. Медианная фильтрация ----------
-  setStatus('Шаг 3/6: медианная фильтрация (устранение шума)...', 'working');
+  setStatus('Шаг 3/6: фильтрация...', 'working');
   setProgress(30);
-  const medianValues = medianBlur(grayValues, w, h, blurSize);
+  let filteredValues;
+  if (filterType === 'median') filteredValues = medianBlur(grayValues, w, h, blurSize);
+  else if (filterType === 'gaussian') filteredValues = gaussianBlur(grayValues, w, h, blurSize);
+  else filteredValues = new Uint8ClampedArray(grayValues);
   const medianData = new Uint8ClampedArray(w * h * 4);
   for (let i = 0; i < w * h; i++) {
-    const v = medianValues[i];
-    medianData[i * 4] = medianData[i * 4 + 1] = medianData[i * 4 + 2] = v;
-    medianData[i * 4 + 3] = 255;
+    const v = filteredValues[i];
+    medianData[i*4] = medianData[i*4+1] = medianData[i*4+2] = v;
+    medianData[i*4+3] = 255;
   }
   drawToCanvas(medianData, w, h, 'median');
-  updateStats('median', { 'Ядро': blurSize + '×' + blurSize, 'Метод': 'медиана' });
+  updateStats('median', { 'Фильтр': filterType, 'Ядро': blurSize });
 
-  // ---------- Шаг 4. Выравнивание контраста ----------
   setStatus('Шаг 4/6: выравнивание контраста...', 'working');
   setProgress(45);
-  let minVal = 255, maxVal = 0;
+  let minV = 255, maxV = 0;
   for (let i = 0; i < w * h; i++) {
-    const v = medianValues[i];
-    if (v < minVal) minVal = v;
-    if (v > maxVal) maxVal = v;
+    const v = filteredValues[i];
+    if (v < minV) minV = v;
+    if (v > maxV) maxV = v;
   }
-  const range = Math.max(1, maxVal - minVal);
+  const range = Math.max(1, maxV - minV);
   const enhancedValues = new Uint8ClampedArray(w * h);
   const enhancedData = new Uint8ClampedArray(w * h * 4);
   for (let i = 0; i < w * h; i++) {
-    const v = Math.round((medianValues[i] - minVal) * 255 / range);
+    const v = Math.round((filteredValues[i] - minV) * 255 / range);
     enhancedValues[i] = v;
-    enhancedData[i * 4] = enhancedData[i * 4 + 1] = enhancedData[i * 4 + 2] = v;
-    enhancedData[i * 4 + 3] = 255;
+    enhancedData[i*4] = enhancedData[i*4+1] = enhancedData[i*4+2] = v;
+    enhancedData[i*4+3] = 255;
   }
   drawToCanvas(enhancedData, w, h, 'enhanced');
-  updateStats('enhanced', { 'Мин': minVal, 'Макс': maxVal, 'Диапазон': range });
+  updateStats('enhanced', { 'Мин': minV, 'Макс': maxV, 'Диапазон': range });
 
-  // ---------- Шаг 5. Бинаризация + морфология ----------
-  setStatus('Шаг 5/6: бинаризация и морфологическая обработка...', 'working');
+  setStatus('Шаг 5/6: бинаризация и морфология...', 'working');
   setProgress(65);
   const threshold = otsuThreshold(enhancedValues, w * h);
   const binaryValues = new Uint8ClampedArray(w * h);
-  for (let i = 0; i < w * h; i++) {
-    binaryValues[i] = enhancedValues[i] > threshold ? 255 : 0;
-  }
+  for (let i = 0; i < w * h; i++) binaryValues[i] = enhancedValues[i] > threshold ? 255 : 0;
   let morphValues = binaryValues;
   if (morphIter > 0) {
     morphValues = morphology(binaryValues, w, h, 'close', morphIter);
@@ -724,14 +769,13 @@ function processImage() {
   const morphData = new Uint8ClampedArray(w * h * 4);
   for (let i = 0; i < w * h; i++) {
     const v = morphValues[i];
-    morphData[i * 4] = morphData[i * 4 + 1] = morphData[i * 4 + 2] = v;
-    morphData[i * 4 + 3] = 255;
+    morphData[i*4] = morphData[i*4+1] = morphData[i*4+2] = v;
+    morphData[i*4+3] = 255;
   }
   drawToCanvas(morphData, w, h, 'binary');
   updateStats('binary', { 'Порог Оцу': threshold, 'Итераций': morphIter });
 
-  // ---------- Шаг 6. Контуры ----------
-  setStatus('Шаг 6/6: выделение контуров следа...', 'working');
+  setStatus('Шаг 6/6: выделение контуров...', 'working');
   setProgress(85);
   const contoursData = new Uint8ClampedArray(srcData);
   const edges = sobelEdges(morphValues, w, h, edgeThreshold);
@@ -739,16 +783,12 @@ function processImage() {
   for (let i = 0; i < w * h; i++) {
     if (edges[i] > 0) {
       edgeCount++;
-      contoursData[i * 4] = 255;
-      contoursData[i * 4 + 1] = 30;
-      contoursData[i * 4 + 2] = 30;
-      contoursData[i * 4 + 3] = 255;
+      contoursData[i*4] = 255; contoursData[i*4+1] = 30; contoursData[i*4+2] = 30; contoursData[i*4+3] = 255;
     }
   }
   drawToCanvas(contoursData, w, h, 'contours');
   updateStats('contours', { 'Контуров': edgeCount.toLocaleString('ru-RU'), 'Порог': edgeThreshold });
 
-  // ---------- Завершение ----------
   const elapsed = Math.round(performance.now() - t0);
   document.getElementById('infoBar').style.display = 'flex';
   document.getElementById('infoSize').textContent = w + '×' + h;
@@ -756,79 +796,104 @@ function processImage() {
   document.getElementById('infoContours').textContent = edgeCount.toLocaleString('ru-RU');
   document.getElementById('infoTime').textContent = elapsed + ' мс';
 
-  setProgress(100);
-  setStatus('Обработка завершена за ' + elapsed + ' мс. Контуров: ' + edgeCount + '.', 'ready');
-  document.getElementById('downloadAllBtn').disabled = false;
+  addJournalEntry('Полная обработка',
+    'Фильтр: ' + filterType + ' ' + blurSize + '; морф: ' + morphIter + '; порог: ' + edgeThreshold,
+    'Порог Оцу: ' + threshold + '; контуров: ' + edgeCount + '; время: ' + elapsed + ' мс');
 
+  setProgress(100);
+  setStatus('Обработка завершена за ' + elapsed + ' мс. Контуров: ' + edgeCount, 'ready');
+  document.getElementById('downloadAllBtn').disabled = false;
+  document.getElementById('generateProtocolBtn').disabled = false;
+
+  updateSlider();
+  drawRuler();
+  drawHistogram();
   setTimeout(() => setProgress(null), 1000);
 }
 
-// ============================================================
-// ОТРИСОВКА
-// ============================================================
 function drawToCanvas(data, w, h, key) {
   const canvas = document.getElementById(CANVAS_IDS[key]);
   canvas.width = w; canvas.height = h;
   canvas.getContext('2d').putImageData(new ImageData(data, w, h), 0, 0);
-  resultCanvases[key] = canvas;
-
-  // Убираем "empty" у обёртки
-  const wrap = canvas.parentElement;
-  wrap.classList.remove('empty');
-
+  state.resultCanvases[key] = canvas;
+  canvas.parentElement.classList.remove('empty');
   activateCard(key);
   enableCardButtons(key);
 }
-
 function activateCard(key) {
   document.querySelectorAll('.image-card').forEach(c => c.classList.remove('active'));
-  const card = document.querySelector('.image-card[data-key="' + key + '"]');
-  if (card) card.classList.add('active');
+  const c = document.querySelector('.image-card[data-key="' + key + '"]');
+  if (c) c.classList.add('active');
 }
-
 function enableCardButtons(key) {
-  document.querySelectorAll('.icon-btn[data-key="' + key + '"]').forEach(btn => {
-    btn.disabled = false;
-  });
+  document.querySelectorAll('.icon-btn[data-key="' + key + '"]').forEach(b => b.disabled = false);
 }
-
 function updateStats(key, stats) {
   const el = document.getElementById(STATS_IDS[key]);
   if (!el) return;
   el.innerHTML = Object.keys(stats).map(k =>
-    '<div class="stat"><span class="k">' + k + ':</span><span>' + stats[k] + '</span></div>'
+    '<div><span class="k">' + k + ':</span> ' + stats[k] + '</div>'
   ).join('');
 }
-
-// ============================================================
-// ВСПОМОГАТЕЛЬНЫЕ АЛГОРИТМЫ
-// ============================================================
 
 function medianBlur(values, w, h, kernelSize) {
   const result = new Uint8ClampedArray(w * h);
   const radius = Math.floor(kernelSize / 2);
-  const windowSize = kernelSize * kernelSize;
-  const window = new Uint8ClampedArray(windowSize);
+  const maxW = kernelSize * kernelSize;
+  const win = new Uint8ClampedArray(maxW);
   for (let y = 0; y < h; y++) {
     for (let x = 0; x < w; x++) {
-      let count = 0;
+      let c = 0;
       for (let dy = -radius; dy <= radius; dy++) {
         const ny = y + dy;
         if (ny < 0 || ny >= h) continue;
         for (let dx = -radius; dx <= radius; dx++) {
           const nx = x + dx;
           if (nx < 0 || nx >= w) continue;
-          window[count++] = values[ny * w + nx];
+          win[c++] = values[ny * w + nx];
         }
       }
-      // Сортировка вставками
-      for (let i = 1; i < count; i++) {
-        const key = window[i];
-        let j = i - 1;
-        while (j >= 0 && window[j] > key) { window[j + 1] = window[j]; j--; }
-        window[j + 1] = key;
+      for (let i = 1; i < c; i++) {
+        const k = win[i]; let j = i - 1;
+        while (j >= 0 && win[j] > k) { win[j+1] = win[j]; j--; }
+        win[j+1] = k;
       }
-      result[y * w + x] = window[Math.floor(count / 2)];
+      result[y * w + x] = win[Math.floor(c / 2)];
+    }
+  }
+  return result;
+}
+
+function gaussianBlur(values, w, h, kernelSize) {
+  const radius = Math.floor(kernelSize / 2);
+  const sigma = Math.max(1, radius / 2);
+  const kernel = [];
+  let sum = 0;
+  for (let dy = -radius; dy <= radius; dy++) {
+    kernel[dy + radius] = [];
+    for (let dx = -radius; dx <= radius; dx++) {
+      const v = Math.exp(-(dx*dx + dy*dy) / (2 * sigma * sigma));
+      kernel[dy + radius][dx + radius] = v;
+      sum += v;
+    }
+  }
+  for (let dy = 0; dy < kernel.length; dy++)
+    for (let dx = 0; dx < kernel.length; dx++)
+      kernel[dy][dx] /= sum;
+  const result = new Uint8ClampedArray(w * h);
+  for (let y = 0; y < h; y++) {
+    for (let x = 0; x < w; x++) {
+      let acc = 0;
+      for (let dy = -radius; dy <= radius; dy++) {
+        const ny = y + dy;
+        if (ny < 0 || ny >= h) continue;
+        for (let dx = -radius; dx <= radius; dx++) {
+          const nx = x + dx;
+          if (nx < 0 || nx >= w) continue;
+          acc += values[ny * w + nx] * kernel[dy + radius][dx + radius];
+        }
+      }
+      result[y * w + x] = Math.round(acc);
     }
   }
   return result;
@@ -856,10 +921,9 @@ function otsuThreshold(values, total) {
 
 function morphology(values, w, h, operation, iterations) {
   let result = new Uint8ClampedArray(values);
-  for (let iter = 0; iter < iterations; iter++) {
-    // Шаг 1: dilate или erode
-    const temp = new Uint8ClampedArray(w * h);
+  for (let it = 0; it < iterations; it++) {
     const isDilate = (operation === 'close');
+    const temp = new Uint8ClampedArray(w * h);
     for (let y = 0; y < h; y++) {
       for (let x = 0; x < w; x++) {
         let val = isDilate ? 0 : 255;
@@ -876,7 +940,6 @@ function morphology(values, w, h, operation, iterations) {
         temp[y * w + x] = val;
       }
     }
-    // Шаг 2: обратная операция
     const temp2 = new Uint8ClampedArray(w * h);
     for (let y = 0; y < h; y++) {
       for (let x = 0; x < w; x++) {
@@ -901,79 +964,56 @@ function morphology(values, w, h, operation, iterations) {
 
 function sobelEdges(values, w, h, threshold) {
   const result = new Uint8ClampedArray(w * h);
-  const Gx = [[-1, 0, 1], [-2, 0, 2], [-1, 0, 1]];
-  const Gy = [[-1, -2, -1], [0, 0, 0], [1, 2, 1]];
+  const Gx = [[-1,0,1],[-2,0,2],[-1,0,1]];
+  const Gy = [[-1,-2,-1],[0,0,0],[1,2,1]];
   for (let y = 1; y < h - 1; y++) {
     for (let x = 1; x < w - 1; x++) {
-      let sumX = 0, sumY = 0;
+      let sx = 0, sy = 0;
       for (let dy = -1; dy <= 1; dy++) {
         for (let dx = -1; dx <= 1; dx++) {
-          const val = values[(y + dy) * w + (x + dx)];
-          sumX += val * Gx[dy + 1][dx + 1];
-          sumY += val * Gy[dy + 1][dx + 1];
+          const v = values[(y+dy)*w + (x+dx)];
+          sx += v * Gx[dy+1][dx+1];
+          sy += v * Gy[dy+1][dx+1];
         }
       }
-      const mag = Math.sqrt(sumX * sumX + sumY * sumY);
-      result[y * w + x] = mag > threshold ? 255 : 0;
+      result[y*w+x] = Math.sqrt(sx*sx + sy*sy) > threshold ? 255 : 0;
     }
   }
   return result;
 }
 
-// ============================================================
-// КНОПКИ НА КАРТОЧКАХ (скачать / открыть)
-// ============================================================
 document.querySelectorAll('.icon-btn').forEach(btn => {
   btn.addEventListener('click', function(e) {
     e.stopPropagation();
-    const key = this.dataset.key;
-    const action = this.dataset.action;
-    const canvas = resultCanvases[key];
+    const key = this.dataset.key, action = this.dataset.action;
+    const canvas = state.resultCanvases[key];
     if (!canvas) return;
-
     if (action === 'download') {
       const link = document.createElement('a');
-      link.download = key + '_result.png';
+      link.download = key + '.png';
       link.href = canvas.toDataURL('image/png');
       link.click();
+      addJournalEntry('Скачивание', CARD_TITLES[key], 'PNG-файл');
     } else if (action === 'zoom') {
       openModal(key, canvas);
     }
   });
 });
-
-// Клик по canvas — открыть в модальном окне
 document.querySelectorAll('.canvas-wrap').forEach(wrap => {
   wrap.addEventListener('click', function() {
-    const card = this.closest('.image-card');
-    const key = card.dataset.key;
-    const canvas = resultCanvases[key];
+    const key = this.closest('.image-card').dataset.key;
+    const canvas = state.resultCanvases[key];
     if (canvas) openModal(key, canvas);
   });
 });
 
-// ============================================================
-// МОДАЛЬНОЕ ОКНО
-// ============================================================
-function openModal(key, sourceCanvas) {
-  const modal = document.getElementById('modal');
-  const modalCanvas = document.getElementById('modalCanvas');
-  const title = document.getElementById('modalTitle');
-  const titles = {
-    original: 'Исходное изображение',
-    gray: 'Оттенки серого',
-    median: 'Фильтрация',
-    enhanced: 'Выравнивание контраста',
-    binary: 'Бинаризация и морфология',
-    contours: 'Выделенные контуры следа'
-  };
-  title.textContent = titles[key] || key;
-  modalCanvas.width = sourceCanvas.width;
-  modalCanvas.height = sourceCanvas.height;
-  modalCanvas.getContext('2d').drawImage(sourceCanvas, 0, 0);
-  modal.classList.add('active');
+function openModal(key, src) {
+  document.getElementById('modalTitle').textContent = CARD_TITLES[key] || key;
+  const c = document.getElementById('modalCanvas');
+  c.width = src.width; c.height = src.height;
+  c.getContext('2d').drawImage(src, 0, 0);
+  document.getElementById('modal').classList.add('active');
 }
-
 document.getElementById('modalClose').addEventListener('click', () => {
   document.getElementById('modal').classList.remove('active');
 });
@@ -981,54 +1021,280 @@ document.getElementById('modal').addEventListener('click', function(e) {
   if (e.target === this) this.classList.remove('active');
 });
 
-// ============================================================
-// СКАЧАТЬ ВСЁ
-// ============================================================
 document.getElementById('downloadAllBtn').addEventListener('click', function() {
-  const keys = ['original', 'gray', 'median', 'enhanced', 'binary', 'contours'];
+  const keys = ['original','gray','median','enhanced','binary','contours'];
   keys.forEach((key, i) => {
-    const canvas = resultCanvases[key];
-    if (!canvas) return;
+    const c = state.resultCanvases[key];
+    if (!c) return;
     setTimeout(() => {
-      const link = document.createElement('a');
-      link.download = (i + 1) + '_' + key + '.png';
-      link.href = canvas.toDataURL('image/png');
-      link.click();
-    }, i * 250);
+      const l = document.createElement('a');
+      l.download = (i+1) + '_' + key + '.png';
+      l.href = c.toDataURL('image/png');
+      l.click();
+    }, i * 300);
   });
+  addJournalEntry('Скачивание всех', '6 изображений', 'PNG-файлы');
 });
 
-// ============================================================
-// СБРОС
-// ============================================================
 document.getElementById('resetBtn').addEventListener('click', function() {
-  sourceImageData = null;
-  resultCanvases = {};
+  state.sourceImageData = null;
+  state.resultCanvases = {};
+  state.sourceFileHash = '';
   document.getElementById('fileInput').value = '';
   document.getElementById('processBtn').disabled = true;
   document.getElementById('downloadAllBtn').disabled = true;
   document.getElementById('resetBtn').disabled = true;
   document.getElementById('infoBar').style.display = 'none';
-
+  document.getElementById('hashValue').textContent = '—';
+  document.getElementById('copyHashBtn').disabled = true;
   resetResults();
   setStatus('Сброшено. Выберите новое изображение.', 'ready');
   setProgress(null);
+  updateSlider();
+  drawRuler();
+  drawHistogram();
 });
 
 function resetResults() {
   Object.keys(CANVAS_IDS).forEach(key => {
-    const canvas = document.getElementById(CANVAS_IDS[key]);
-    canvas.width = 0; canvas.height = 0;
-    canvas.parentElement.classList.add('empty');
-    const statsEl = document.getElementById(STATS_IDS[key]);
-    if (statsEl) statsEl.textContent = '—';
+    const c = document.getElementById(CANVAS_IDS[key]);
+    c.width = 0; c.height = 0;
+    c.parentElement.classList.add('empty');
+    const s = document.getElementById(STATS_IDS[key]);
+    if (s) s.textContent = '—';
     document.querySelectorAll('.icon-btn[data-key="' + key + '"]').forEach(b => b.disabled = true);
   });
   document.querySelectorAll('.image-card').forEach(c => c.classList.remove('active'));
 }
 
-// Инициализация
+function updateSlider() {
+  const canvas = document.getElementById('cvSlider');
+  const orig = state.resultCanvases.original;
+  const res = state.resultCanvases.contours || state.resultCanvases.enhanced || state.resultCanvases.gray;
+  if (!orig || !res) {
+    canvas.width = 800; canvas.height = 400;
+    const ctx = canvas.getContext('2d');
+    ctx.fillStyle = '#1a1f2e';
+    ctx.fillRect(0, 0, 800, 400);
+    ctx.fillStyle = '#666';
+    ctx.font = '16px Arial';
+    ctx.textAlign = 'center';
+    ctx.fillText('Загрузите изображение и выполните обработку', 400, 200);
+    return;
+  }
+  const w = orig.width, h = orig.height;
+  canvas.width = w; canvas.height = h;
+  const ctx = canvas.getContext('2d');
+  const split = parseInt(document.getElementById('sliderHandle').style.left, 10) || 50;
+  ctx.drawImage(orig, 0, 0, w, h);
+  const splitX = Math.round(w * split / 100);
+  ctx.save();
+  ctx.beginPath();
+  ctx.rect(splitX, 0, w - splitX, h);
+  ctx.clip();
+  ctx.drawImage(res, 0, 0, w, h);
+  ctx.restore();
+}
+
+const sliderWrap = document.getElementById('sliderWrap');
+const sliderHandle = document.getElementById('sliderHandle');
+let sliderDragging = false;
+sliderWrap.addEventListener('mousedown', e => { sliderDragging = true; moveSlider(e); });
+document.addEventListener('mousemove', e => { if (sliderDragging) moveSlider(e); });
+document.addEventListener('mouseup', () => { sliderDragging = false; });
+sliderWrap.addEventListener('touchstart', e => { sliderDragging = true; moveSlider(e.touches[0]); });
+document.addEventListener('touchmove', e => { if (sliderDragging) moveSlider(e.touches[0]); });
+document.addEventListener('touchend', () => { sliderDragging = false; });
+
+function moveSlider(e) {
+  const rect = sliderWrap.getBoundingClientRect();
+  let x = (e.clientX - rect.left) / rect.width * 100;
+  x = Math.max(0, Math.min(100, x));
+  sliderHandle.style.left = x + '%';
+  updateSlider();
+}
+
+document.getElementById('sampleInput').addEventListener('change', function(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(ev) {
+    const img = new Image();
+    img.onload = function() {
+      state.overlayImage = img;
+      updateOverlay();
+      addJournalEntry('Загрузка образца', 'Файл: ' + file.name, 'Размер: ' + img.width + '×' + img.height);
+    };
+    img.src = ev.target.result;
+  };
+  reader.readAsDataURL(file);
+});
+document.getElementById('clearOverlayBtn').addEventListener('click', function() {
+  state.overlayImage = null;
+  document.getElementById('sampleInput').value = '';
+  updateOverlay();
+});
+function updateOverlay() {
+  const canvas = document.getElementById('cvOverlay');
+  const base = state.resultCanvases.contours || state.resultCanvases.original;
+  if (!base) {
+    canvas.width = 800; canvas.height = 400;
+    const ctx = canvas.getContext('2d');
+    ctx.fillStyle = '#1a1f2e'; ctx.fillRect(0, 0, 800, 400);
+    ctx.fillStyle = '#666'; ctx.font = '16px Arial'; ctx.textAlign = 'center';
+    ctx.fillText('Сначала загрузите и обработайте след', 400, 200);
+    return;
+  }
+  canvas.width = base.width; canvas.height = base.height;
+  const ctx = canvas.getContext('2d');
+  ctx.drawImage(base, 0, 0);
+  if (state.overlayImage) {
+    ctx.globalAlpha = state.overlayOpacity / 100;
+    ctx.drawImage(state.overlayImage, 0, 0, base.width, base.height);
+    ctx.globalAlpha = 1;
+  }
+}
+
+function drawRuler() {
+  const canvas = document.getElementById('cvRuler');
+  const base = state.resultCanvases.original;
+  if (!base) {
+    canvas.width = 800; canvas.height = 400;
+    const ctx = canvas.getContext('2d');
+    ctx.fillStyle = '#1a1f2e'; ctx.fillRect(0, 0, 800, 400);
+    ctx.fillStyle = '#666'; ctx.font = '16px Arial'; ctx.textAlign = 'center';
+    ctx.fillText('Загрузите изображение для измерений', 400, 200);
+    return;
+  }
+  canvas.width = base.width; canvas.height = base.height;
+  const ctx = canvas.getContext('2d');
+  ctx.drawImage(base, 0, 0);
+  state.rulerPoints.forEach(p => {
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, 5, 0, 2 * Math.PI);
+    ctx.fillStyle = '#ffcc00'; ctx.fill();
+    ctx.strokeStyle = '#000'; ctx.lineWidth = 2; ctx.stroke();
+  });
+  if (state.rulerPoints.length === 2) {
+    const [p1, p2] = state.rulerPoints;
+    ctx.beginPath();
+    ctx.moveTo(p1.x, p1.y);
+    ctx.lineTo(p2.x, p2.y);
+    ctx.strokeStyle = '#ff3b30'; ctx.lineWidth = 3; ctx.stroke();
+    const dx = p2.x - p1.x, dy = p2.y - p1.y;
+    const dist = Math.round(Math.sqrt(dx*dx + dy*dy));
+    document.getElementById('rulerDistance').textContent = dist + ' px';
+    ctx.fillStyle = '#ff3b30'; ctx.font = 'bold 16px Arial';
+    ctx.fillText(dist + ' px', (p1.x + p2.x) / 2 + 10, (p1.y + p2.y) / 2 - 10);
+  }
+}
+document.getElementById('cvRuler').addEventListener('click', function(e) {
+  if (!state.resultCanvases.original) return;
+  const rect = this.getBoundingClientRect();
+  const x = Math.round((e.clientX - rect.left) * this.width / rect.width);
+  const y = Math.round((e.clientY - rect.top) * this.height / rect.height);
+  if (state.rulerPoints.length >= 2) state.rulerPoints = [];
+  state.rulerPoints.push({ x, y });
+  drawRuler();
+  if (state.rulerPoints.length === 2) {
+    const [p1, p2] = state.rulerPoints;
+    const dist = Math.round(Math.sqrt((p2.x-p1.x)**2 + (p2.y-p1.y)**2));
+    addJournalEntry('Измерение', 'Точки: (' + p1.x + ',' + p1.y + ') — (' + p2.x + ',' + p2.y + ')', 'Расстояние: ' + dist + ' px');
+  }
+});
+document.getElementById('clearRulerBtn').addEventListener('click', function() {
+  state.rulerPoints = [];
+  document.getElementById('rulerDistance').textContent = '— px';
+  drawRuler();
+});
+
+function drawHistogram() {
+  const canvas = document.getElementById('histogramCanvas');
+  if (!state.sourceImageData) {
+    canvas.width = 700; canvas.height = 220;
+    const ctx = canvas.getContext('2d');
+    ctx.fillStyle = '#0d1117'; ctx.fillRect(0, 0, 700, 220);
+    ctx.fillStyle = '#666'; ctx.font = '14px Arial'; ctx.textAlign = 'center';
+    ctx.fillText('Загрузите изображение', 350, 110);
+    return;
+  }
+  const w = state.sourceImageData.width;
+  const h = state.sourceImageData.height;
+  const data = state.sourceImageData.data;
+  const hist = new Array(256).fill(0);
+  for (let i = 0; i < w * h; i++) {
+    const v = Math.round(0.299*data[i*4] + 0.587*data[i*4+1] + 0.114*data[i*4+2]);
+    hist[v]++;
+  }
+  const maxH = Math.max(...hist);
+  canvas.width = 700; canvas.height = 220;
+  const ctx = canvas.getContext('2d');
+  ctx.fillStyle = '#0d1117'; ctx.fillRect(0, 0, 700, 220);
+  const barW = 700 / 256;
+  for (let i = 0; i < 256; i++) {
+    const barH = (hist[i] / maxH) * 190;
+    ctx.fillStyle = 'hsl(' + (i * 280 / 256) + ', 70%, 55%)';
+    ctx.fillRect(i * barW, 220 - barH, Math.max(1, barW), barH);
+  }
+  ctx.strokeStyle = '#8ab4f8'; ctx.lineWidth = 1;
+  ctx.strokeRect(0.5, 0.5, 699, 219);
+}
+
+document.getElementById('generateProtocolBtn').addEventListener('click', function() {
+  const preview = document.getElementById('protocolPreview');
+  if (state.journal.length === 0) {
+    preview.innerHTML = '<p>Журнал пуст. Выполните обработку.</p>';
+    return;
+  }
+  const now = new Date().toLocaleString('ru-RU');
+  let html = '<h1>ПРОТОКОЛ ОБРАБОТКИ ИЗОБРАЖЕНИЯ</h1>';
+  html += '<p><b>Дата формирования:</b> ' + now + '</p>';
+  html += '<p><b>Имя файла:</b> ' + (state.sourceFileName || '—') + '</p>';
+  html += '<p><b>SHA-256 исходного изображения:</b><br><span style="font-family:monospace;font-size:11px;">' + (state.sourceFileHash || '—') + '</span></p>';
+  html += '<h2>Журнал операций</h2>';
+  html += '<table><thead><tr><th>№</th><th>Время</th><th>Действие</th><th>Параметры</th><th>Результат</th></tr></thead><tbody>';
+  state.journal.forEach((e, i) => {
+    html += '<tr><td>' + (i+1) + '</td><td>' + e.time + '</td><td>' + e.action + '</td><td>' + e.params + '</td><td>' + e.result + '</td></tr>';
+  });
+  html += '</tbody></table>';
+  html += '<h2>Примечание</h2>';
+  html += '<p style="font-size:13px;">Настоящий протокол сформирован автоматически программным решением для обработки изображений следов. Хэш SHA-256 подтверждает неизменность исходного файла. Все операции, указанные в журнале, могут быть воспроизведены при тех же параметрах обработки.</p>';
+  preview.innerHTML = html;
+  document.getElementById('downloadProtocolBtn').disabled = false;
+  document.getElementById('printProtocolBtn').disabled = false;
+  addJournalEntry('Формирование протокола', 'Записей: ' + state.journal.length, 'HTML-документ');
+});
+
+document.getElementById('downloadProtocolBtn').addEventListener('click', function() {
+  const content = document.getElementById('protocolPreview').innerHTML;
+  const full = '<!DOCTYPE html><html><head><meta charset="utf-8"><title>Протокол обработки</title><style>body{font-family:"Times New Roman",serif;padding:40px;max-width:900px;margin:auto;line-height:1.6;}h1{text-align:center;font-size:18px;}h2{font-size:15px;margin-top:20px;}table{width:100%;border-collapse:collapse;margin:10px 0;font-size:13px;}th,td{border:1px solid #999;padding:6px 10px;text-align:left;}</style></head><body>' + content + '</body></html>';
+  const blob = new Blob([full], { type: 'text/html;charset=utf-8' });
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(blob);
+  link.download = 'protocol.html';
+  link.click();
+});
+
+document.getElementById('printProtocolBtn').addEventListener('click', function() {
+  const content = document.getElementById('protocolPreview').innerHTML;
+  const win = window.open('', '_blank');
+  win.document.write('<!DOCTYPE html><html><head><meta charset="utf-8"><title>Протокол</title><style>body{font-family:"Times New Roman",serif;padding:40px;line-height:1.6;}h1{text-align:center;}h2{font-size:15px;}table{width:100%;border-collapse:collapse;margin:10px 0;font-size:13px;}th,td{border:1px solid #999;padding:6px 10px;text-align:left;}</style></head><body>' + content + '</body></html>');
+  win.document.close();
+  win.print();
+});
+
+document.addEventListener('keydown', function(e) {
+  if (e.ctrlKey && e.key === 'o') { e.preventDefault(); document.getElementById('fileInput').click(); }
+  if (e.ctrlKey && e.key === 's') { e.preventDefault(); if (!document.getElementById('downloadAllBtn').disabled) document.getElementById('downloadAllBtn').click(); }
+  if (e.ctrlKey && e.key === 'Enter') { e.preventDefault(); if (!document.getElementById('processBtn').disabled) document.getElementById('processBtn').click(); }
+  if (e.key === 'Escape') document.getElementById('modal').classList.remove('active');
+});
+
 resetResults();
+updateSlider();
+drawRuler();
+drawHistogram();
+renderJournal();
 </script>
 </body>
 </html>
