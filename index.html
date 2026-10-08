@@ -2,90 +2,197 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<title>Обработка изображений следов</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Обработка изображений следов — трасологическая экспертиза</title>
 <style>
-  body { font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5; }
-  h1 { color: #333; }
-  .container { max-width: 1200px; margin: 0 auto; }
-  .controls { margin: 20px 0; }
-  button { padding: 10px 20px; margin: 5px; font-size: 16px; cursor: pointer; }
+  * { box-sizing: border-box; }
+  body {
+    font-family: 'Segoe UI', Arial, sans-serif;
+    margin: 0;
+    padding: 20px;
+    background: #eef1f5;
+    color: #222;
+  }
+  .container { max-width: 1300px; margin: 0 auto; }
+  h1 { font-size: 22px; margin: 0 0 5px 0; color: #1a3d6d; }
+  .subtitle { color: #555; font-size: 14px; margin-bottom: 20px; }
+
+  .panel {
+    background: #fff;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+  }
+
+  .controls { display: flex; flex-wrap: wrap; gap: 15px; align-items: center; }
+  .controls label { font-size: 14px; font-weight: 600; color: #333; }
+
+  input[type="file"] {
+    padding: 6px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    background: #fafafa;
+  }
+
+  input[type="range"] { width: 140px; vertical-align: middle; }
+  .range-value { font-size: 13px; color: #1a3d6d; font-weight: 600; min-width: 30px; display: inline-block; }
+
+  button {
+    padding: 10px 22px;
+    font-size: 15px;
+    font-weight: 600;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
   button:disabled { opacity: 0.5; cursor: not-allowed; }
-  .images { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-top: 20px; }
-  .images div { background: #fff; padding: 10px; border-radius: 5px; }
-  .images canvas { width: 100%; height: auto; display: block; background: #eee; }
-  .images p { text-align: center; font-weight: bold; margin: 5px 0; }
-  #status { margin: 15px 0; padding: 10px; background: #fff; border-left: 4px solid #4CAF50; font-size: 15px; }
-  #status.error { border-left-color: #f44336; color: #b71c1c; }
+  #processBtn { background: #1a73e8; color: #fff; }
+  #processBtn:hover:not(:disabled) { background: #1557b0; }
+  #downloadBtn { background: #34a853; color: #fff; }
+  #downloadBtn:hover:not(:disabled) { background: #2a8642; }
+  #resetBtn { background: #9aa0a6; color: #fff; }
+  #resetBtn:hover:not(:disabled) { background: #7c8288; }
+
+  #status {
+    margin-top: 15px;
+    padding: 12px 15px;
+    background: #f1f8e9;
+    border-left: 4px solid #34a853;
+    border-radius: 4px;
+    font-size: 14px;
+    min-height: 20px;
+  }
+  #status.error { background: #fdecea; border-left-color: #d93025; color: #a50e0e; }
+  #status.working { background: #e8f0fe; border-left-color: #1a73e8; color: #1a3d6d; }
+
+  .images {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 15px;
+  }
+  .image-card {
+    background: #fff;
+    border-radius: 8px;
+    padding: 12px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+  }
+  .image-card h3 {
+    margin: 0 0 8px 0;
+    font-size: 14px;
+    color: #1a3d6d;
+    text-align: center;
+  }
+  .image-card canvas {
+    width: 100%;
+    height: auto;
+    display: block;
+    background: #f0f0f0;
+    border-radius: 4px;
+    min-height: 180px;
+  }
+
+  .footer { text-align: center; color: #888; font-size: 12px; margin-top: 30px; }
 </style>
 </head>
 <body>
 <div class="container">
-  <h1>Обработка изображений следов</h1>
-  <p>Загрузите изображение следа и нажмите «Обработать».</p>
+  <h1>Программное решение для обработки изображений следов</h1>
+  <p class="subtitle">Трасологическая экспертиза — цифровая обработка изображений</p>
 
-  <div class="controls">
-    <input type="file" id="fileInput" accept="image/*">
-    <button id="processBtn" disabled>Обработать</button>
-    <button id="downloadBtn" disabled>Скачать результат</button>
+  <div class="panel">
+    <div class="controls">
+      <label for="fileInput">Изображение следа:</label>
+      <input type="file" id="fileInput" accept="image/*" disabled>
+
+      <label for="blurRange">Сила фильтрации:</label>
+      <input type="range" id="blurRange" min="1" max="15" value="5" step="2" disabled>
+      <span class="range-value" id="blurValue">5</span>
+
+      <label for="morphRange">Морфология:</label>
+      <input type="range" id="morphRange" min="0" max="5" value="1" step="1" disabled>
+      <span class="range-value" id="morphValue">1</span>
+
+      <button id="processBtn" disabled>Обработать</button>
+      <button id="downloadBtn" disabled>Скачать результат</button>
+      <button id="resetBtn" disabled>Сбросить</button>
+    </div>
+    <div id="status">Загрузка OpenCV.js... Пожалуйста, подождите.</div>
   </div>
-
-  <div id="status">Загрузка OpenCV.js... Пожалуйста, подождите.</div>
 
   <div class="images">
-    <div><p>Исходное</p><canvas id="cvOriginal"></canvas></div>
-    <div><p>Оттенки серого</p><canvas id="cvGray"></canvas></div>
-    <div><p>Медианная фильтрация</p><canvas id="cvMedian"></canvas></div>
-    <div><p>Выравнивание контраста</p><canvas id="cvEnhanced"></canvas></div>
-    <div><p>Бинаризация + морфология</p><canvas id="cvBinary"></canvas></div>
-    <div><p>Выделенные контуры</p><canvas id="cvContours"></canvas></div>
+    <div class="image-card"><h3>1. Исходное изображение</h3><canvas id="cvOriginal"></canvas></div>
+    <div class="image-card"><h3>2. Оттенки серого</h3><canvas id="cvGray"></canvas></div>
+    <div class="image-card"><h3>3. Фильтрация (устранение шума)</h3><canvas id="cvMedian"></canvas></div>
+    <div class="image-card"><h3>4. Выравнивание контраста</h3><canvas id="cvEnhanced"></canvas></div>
+    <div class="image-card"><h3>5. Бинаризация и морфология</h3><canvas id="cvBinary"></canvas></div>
+    <div class="image-card"><h3>6. Выделенные контуры следа</h3><canvas id="cvContours"></canvas></div>
   </div>
+
+  <div class="footer">Курсовая работа — методы цифровой обработки изображений в трасологической экспертизе</div>
 </div>
 
 <script>
-// Загружаем OpenCV.js с проверенного CDN
-const script = document.createElement('script');
-script.src = 'https://docs.opencv.org/4.7.0/opencv.js';
-script.async = true;
-script.onload = function() {
-  // Ждём инициализации runtime
-  if (cv.getBuildInformation) {
+// ============================================================
+// ЗАГРУЗКА OpenCV.js
+// ============================================================
+const cvScript = document.createElement('script');
+cvScript.src = 'https://docs.opencv.org/4.7.0/opencv.js';
+cvScript.async = true;
+cvScript.onload = function() {
+  if (typeof cv !== 'undefined' && cv.getBuildInformation) {
     onOpenCvReady();
-  } else {
+  } else if (typeof cv !== 'undefined') {
     cv['onRuntimeInitialized'] = onOpenCvReady;
+  } else {
+    showStatus('Ошибка: OpenCV.js загрузился некорректно.', true);
   }
 };
-script.onerror = function() {
-  showStatus('Ошибка: не удалось загрузить OpenCV.js. Проверьте интернет.', true);
+cvScript.onerror = function() {
+  showStatus('Ошибка: не удалось загрузить OpenCV.js. Проверьте подключение к интернету.', true);
 };
-document.head.appendChild(script);
+document.head.appendChild(cvScript);
 
+// ============================================================
+// ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ
+// ============================================================
 let cvReady = false;
-let sourceImageData = null; // будет хранить исходный ImageData
-let resultCanvas = null;
+let sourceImageData = null;   // исходные данные изображения
+let processedCanvas = null;   // canvas с итоговым результатом
 
+// ============================================================
+// ИНИЦИАЛИЗАЦИЯ
+// ============================================================
 function onOpenCvReady() {
   cvReady = true;
-  showStatus('OpenCV.js загружен. Выберите изображение.');
+  showStatus('OpenCV.js успешно загружен. Выберите изображение следа.', false, 'ready');
   document.getElementById('fileInput').disabled = false;
 }
 
-function showStatus(text, isError) {
+function showStatus(text, isError, mode) {
   const el = document.getElementById('status');
   el.textContent = text;
-  el.className = isError ? 'error' : '';
+  el.className = '';
+  if (isError) el.className = 'error';
+  else if (mode === 'working') el.className = 'working';
 }
 
-// Обработка выбора файла
+// ============================================================
+// ВЫБОР ФАЙЛА
+// ============================================================
 document.getElementById('fileInput').addEventListener('change', function(e) {
   const file = e.target.files[0];
   if (!file) return;
+
+  showStatus('Чтение файла...', false, 'working');
 
   const reader = new FileReader();
   reader.onload = function(event) {
     const img = new Image();
     img.onload = function() {
-      // Уменьшаем изображение до max 900px по большей стороне
-      const MAX_SIZE = 900;
+      // Уменьшаем изображение до 1000 px по большей стороне
+      const MAX_SIZE = 1000;
       let w = img.width;
       let h = img.height;
       if (w > MAX_SIZE || h > MAX_SIZE) {
@@ -105,21 +212,33 @@ document.getElementById('fileInput').addEventListener('change', function(e) {
       const ctx = tmp.getContext('2d');
       ctx.drawImage(img, 0, 0, w, h);
 
-      // Сохраняем ImageData
       sourceImageData = ctx.getImageData(0, 0, w, h);
 
-      // Показываем на canvas "Исходное"
+      // Показываем исходное изображение
       const origCanvas = document.getElementById('cvOriginal');
       origCanvas.width = w;
       origCanvas.height = h;
       origCanvas.getContext('2d').putImageData(sourceImageData, 0, 0);
 
-      // Активируем кнопку
+      // Очищаем остальные canvas
+      ['cvGray','cvMedian','cvEnhanced','cvBinary','cvContours'].forEach(function(id) {
+        const c = document.getElementById(id);
+        c.width = w;
+        c.height = h;
+        c.getContext('2d').clearRect(0, 0, w, h);
+      });
+
+      // Активируем контролы
       document.getElementById('processBtn').disabled = false;
-      showStatus('Изображение загружено (' + w + '×' + h + '). Нажмите «Обработать».');
+      document.getElementById('downloadBtn').disabled = true;
+      document.getElementById('blurRange').disabled = false;
+      document.getElementById('morphRange').disabled = false;
+      document.getElementById('resetBtn').disabled = false;
+
+      showStatus('Изображение загружено: ' + w + '×' + h + ' пикселей. Нажмите «Обработать».', false, 'ready');
     };
     img.onerror = function() {
-      showStatus('Ошибка: не удалось прочитать файл изображения.', true);
+      showStatus('Ошибка: не удалось прочитать изображение.', true);
     };
     img.src = event.target.result;
   };
@@ -129,68 +248,84 @@ document.getElementById('fileInput').addEventListener('change', function(e) {
   reader.readAsDataURL(file);
 });
 
-// Основная обработка
+// ============================================================
+// ОБНОВЛЕНИЕ ЗНАЧЕНИЙ ПОЛЗУНКОВ
+// ============================================================
+document.getElementById('blurRange').addEventListener('input', function() {
+  document.getElementById('blurValue').textContent = this.value;
+});
+document.getElementById('morphRange').addEventListener('input', function() {
+  document.getElementById('morphValue').textContent = this.value;
+});
+
+// ============================================================
+// ОБРАБОТКА
+// ============================================================
 document.getElementById('processBtn').addEventListener('click', function() {
-  if (!cvReady) {
-    showStatus('OpenCV.js ещё не загружен. Подождите.', true);
-    return;
-  }
-  if (!sourceImageData) {
-    showStatus('Сначала загрузите изображение.', true);
-    return;
-  }
+  if (!cvReady) { showStatus('OpenCV.js ещё не загружен.', true); return; }
+  if (!sourceImageData) { showStatus('Сначала загрузите изображение.', true); return; }
 
   document.getElementById('processBtn').disabled = true;
   document.getElementById('downloadBtn').disabled = true;
 
-  // Даём браузеру отрисовать статус перед тяжёлой работой
-  setTimeout(processImage, 50);
+  // Даём браузеру отрисовать интерфейс перед тяжёлой работой
+  setTimeout(processImage, 60);
 });
 
 function processImage() {
-  let src, gray, median, enhanced, binary, kernel, morph, contoursImg;
+  const blurSize = parseInt(document.getElementById('blurRange').value, 10);
+  const morphIter = parseInt(document.getElementById('morphRange').value, 10);
+
+  let src, gray, median, enhanced, binary, kernel, morph, contoursImg, rgba;
   let contours, hierarchy;
 
   try {
     const w = sourceImageData.width;
     const h = sourceImageData.height;
 
-    showStatus('Шаг 1/6: подготовка изображения...');
-
-    // Создаём Mat из ImageData
+    // ---------- Шаг 1. Загрузка ----------
+    showStatus('Шаг 1/6: подготовка изображения...', false, 'working');
     src = cv.matFromImageData(sourceImageData);
 
-    // 1. Оттенки серого
-    showStatus('Шаг 2/6: перевод в оттенки серого...');
+    // ---------- Шаг 2. Оттенки серого ----------
+    showStatus('Шаг 2/6: перевод в оттенки серого...', false, 'working');
     gray = new cv.Mat();
     cv.cvtColor(src, gray, cv.COLOR_RGBA2GRAY);
-    drawToCanvas(gray, 'cvGray');
+    drawMat(gray, 'cvGray');
 
-    // 2. Медианная фильтрация
-    showStatus('Шаг 3/6: медианная фильтрация...');
+    // ---------- Шаг 3. Фильтрация ----------
+    showStatus('Шаг 3/6: медианная фильтрация (устранение шума)...', false, 'working');
     median = new cv.Mat();
-    cv.medianBlur(gray, median, 5);
-    drawToCanvas(median, 'cvMedian');
+    // Ядро должно быть нечётным и >= 1
+    let ksize = Math.max(1, blurSize);
+    if (ksize % 2 === 0) ksize += 1;
+    cv.medianBlur(gray, median, ksize);
+    drawMat(median, 'cvMedian');
 
-    // 3. Выравнивание контраста (без CLAHE — используем нормализацию)
-    showStatus('Шаг 4/6: выравнивание контраста...');
+    // ---------- Шаг 4. Выравнивание контраста ----------
+    showStatus('Шаг 4/6: выравнивание контраста...', false, 'working');
     enhanced = new cv.Mat();
+    // Нормализация диапазона яркостей (без CLAHE — работает стабильно)
     cv.normalize(median, enhanced, 0, 255, cv.NORM_MINMAX);
-    drawToCanvas(enhanced, 'cvEnhanced');
+    drawMat(enhanced, 'cvEnhanced');
 
-    // 4. Бинаризация методом Оцу + морфология
-    showStatus('Шаг 5/6: бинаризация и морфология...');
+    // ---------- Шаг 5. Бинаризация и морфология ----------
+    showStatus('Шаг 5/6: бинаризация и морфологическая обработка...', false, 'working');
     binary = new cv.Mat();
     cv.threshold(enhanced, binary, 0, 255, cv.THRESH_BINARY + cv.THRESH_OTSU);
 
     kernel = cv.Mat.ones(3, 3, cv.CV_8U);
     morph = new cv.Mat();
-    cv.morphologyEx(binary, morph, cv.MORPH_CLOSE, kernel);
-    cv.morphologyEx(morph, morph, cv.MORPH_OPEN, kernel);
-    drawToCanvas(morph, 'cvBinary');
+    if (morphIter > 0) {
+      cv.morphologyEx(binary, morph, cv.MORPH_CLOSE, kernel, new cv.Point(-1,-1), morphIter);
+      cv.morphologyEx(morph, morph, cv.MORPH_OPEN, kernel, new cv.Point(-1,-1), morphIter);
+    } else {
+      binary.copyTo(morph);
+    }
+    drawMat(morph, 'cvBinary');
 
-    // 5. Контуры
-    showStatus('Шаг 6/6: выделение контуров...');
+    // ---------- Шаг 6. Контуры ----------
+    showStatus('Шаг 6/6: выделение контуров следа...', false, 'working');
     contours = new cv.MatVector();
     hierarchy = new cv.Mat();
     cv.findContours(morph, contours, hierarchy, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE);
@@ -199,60 +334,82 @@ function processImage() {
     for (let i = 0; i < contours.size(); i++) {
       cv.drawContours(contoursImg, contours, i, new cv.Scalar(255, 0, 0, 255), 2);
     }
-    drawToCanvas(contoursImg, 'cvContours');
+    drawMat(contoursImg, 'cvContours');
 
-    // Сохраняем ссылку на результат для скачивания
-    resultCanvas = document.getElementById('cvContours');
-
-    showStatus('Обработка завершена. Найдено контуров: ' + contours.size() + '.');
+    // ---------- Готово ----------
+    processedCanvas = document.getElementById('cvContours');
     document.getElementById('downloadBtn').disabled = false;
+    showStatus('Обработка завершена. Найдено контуров: ' + contours.size() + '. Можно скачать результат.', false, 'ready');
 
   } catch (err) {
     console.error(err);
     showStatus('Ошибка обработки: ' + err.message, true);
   } finally {
-    // Освобождаем память
-    if (src) src.delete();
-    if (gray) gray.delete();
-    if (median) median.delete();
-    if (enhanced) enhanced.delete();
-    if (binary) binary.delete();
-    if (kernel) kernel.delete();
-    if (morph) morph.delete();
-    if (contours) contours.delete();
-    if (hierarchy) hierarchy.delete();
-    if (contoursImg) contoursImg.delete();
+    // Освобождаем память OpenCV
+    [src, gray, median, enhanced, binary, kernel, morph, contoursImg].forEach(function(m) {
+      if (m && typeof m.delete === 'function') { try { m.delete(); } catch(e){} }
+    });
+    if (contours && typeof contours.delete === 'function') { try { contours.delete(); } catch(e){} }
+    if (hierarchy && typeof hierarchy.delete === 'function') { try { hierarchy.delete(); } catch(e){} }
+    if (rgba && typeof rgba.delete === 'function') { try { rgba.delete(); } catch(e){} }
 
     document.getElementById('processBtn').disabled = false;
   }
 }
 
-// Функция отрисовки Mat в canvas
-function drawToCanvas(mat, canvasId) {
+// ============================================================
+// ОТРИСОВКА Mat В CANVAS
+// ============================================================
+function drawMat(mat, canvasId) {
   const canvas = document.getElementById(canvasId);
-  // OpenCV.js работает с RGBA, поэтому конвертируем
   let rgba = new cv.Mat();
-  if (mat.channels() === 1) {
-    cv.cvtColor(mat, rgba, cv.COLOR_GRAY2RGBA);
-  } else if (mat.channels() === 3) {
-    cv.cvtColor(mat, rgba, cv.COLOR_RGB2RGBA);
-  } else {
-    rgba = mat.clone();
+  try {
+    if (mat.channels() === 1) {
+      cv.cvtColor(mat, rgba, cv.COLOR_GRAY2RGBA);
+    } else if (mat.channels() === 3) {
+      cv.cvtColor(mat, rgba, cv.COLOR_RGB2RGBA);
+    } else if (mat.channels() === 4) {
+      rgba = mat.clone();
+    } else {
+      throw new Error('Неподдерживаемое число каналов: ' + mat.channels());
+    }
+    canvas.width = rgba.cols;
+    canvas.height = rgba.rows;
+    const imageData = new ImageData(new Uint8ClampedArray(rgba.data), rgba.cols, rgba.rows);
+    canvas.getContext('2d').putImageData(imageData, 0, 0);
+  } finally {
+    if (rgba && rgba !== mat) { try { rgba.delete(); } catch(e){} }
   }
-  canvas.width = rgba.cols;
-  canvas.height = rgba.rows;
-  const imageData = new ImageData(new Uint8ClampedArray(rgba.data), rgba.cols, rgba.rows);
-  canvas.getContext('2d').putImageData(imageData, 0, 0);
-  rgba.delete();
 }
 
-// Скачивание результата
+// ============================================================
+// СКАЧИВАНИЕ РЕЗУЛЬТАТА
+// ============================================================
 document.getElementById('downloadBtn').addEventListener('click', function() {
-  if (!resultCanvas) return;
+  if (!processedCanvas) return;
   const link = document.createElement('a');
   link.download = 'result_contours.png';
-  link.href = resultCanvas.toDataURL('image/png');
+  link.href = processedCanvas.toDataURL('image/png');
   link.click();
+});
+
+// ============================================================
+// СБРОС
+// ============================================================
+document.getElementById('resetBtn').addEventListener('click', function() {
+  sourceImageData = null;
+  processedCanvas = null;
+  document.getElementById('fileInput').value = '';
+  ['cvOriginal','cvGray','cvMedian','cvEnhanced','cvBinary','cvContours'].forEach(function(id) {
+    const c = document.getElementById(id);
+    c.getContext('2d').clearRect(0, 0, c.width, c.height);
+  });
+  document.getElementById('processBtn').disabled = true;
+  document.getElementById('downloadBtn').disabled = true;
+  document.getElementById('blurRange').disabled = true;
+  document.getElementById('morphRange').disabled = true;
+  document.getElementById('resetBtn').disabled = true;
+  showStatus('Сброшено. Выберите новое изображение.', false, 'ready');
 });
 </script>
 </body>
